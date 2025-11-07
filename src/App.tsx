@@ -1,22 +1,28 @@
 import React, { useEffect, useMemo, useState } from "react";
 
+/** ------------------------------------------------------------------
+ * ModelViewer wrapper (fixes TS2339 without .d.ts or peer deps)
+ * ------------------------------------------------------------------ */
+const ModelViewer: React.FC<any> = (props) =>
+  React.createElement("model-viewer" as any, props);
+
 // --- Config (adjust freely) ---
 const MODELS = {
   plastic: { name: "Plastic", usd: 42 },
   aluminium: { name: "Aluminium", usd: 69 },
 };
 
-// Media assets per model (swap src with your real images/videos)
+// Media assets per model
 type MediaItem =
   | { id: string; type: "image"; src: string; alt: string }
   | { id: string; type: "video"; src: string; alt: string }
   | { id: string; type: "model"; src: string; alt: string; poster?: string };
 
-const MEDIA: Record<string, MediaItem[]> = {
+const MEDIA: Record<keyof typeof MODELS, MediaItem[]> = {
   plastic: [
     { id: "p1", type: "video", src: "/media/plastic/reveal.mp4", alt: "Plastic – front" },
     { id: "p2", type: "video", src: "/media/plastic/spin.mp4",   alt: "Plastic 360°" },
-    // GLB here (was an image before)
+    // GLB (interactive 3D)
     { id: "p3", type: "model", src: "/media/plastic/unit.glb",   alt: "Interactive 3D model", poster: "/media/plastic/hero-1.jpg" },
   ],
   aluminium: [
@@ -40,7 +46,7 @@ function useMockSolPrice() {
   return solPrice;
 }
 
-const Badge = ({ children }) => (
+const Badge = ({ children }: { children: React.ReactNode }) => (
   <span className="inline-flex items-center rounded-full bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-300 ring-1 ring-inset ring-blue-500/30">
     {children}
   </span>
@@ -73,9 +79,17 @@ function Navbar() {
   );
 }
 
+/* =================== Polished Media Carousel =================== */
 function MediaCarousel({ items }: { items: MediaItem[] }) {
   const [index, setIndex] = useState(0);
   const [isReducedMotion, setIsReducedMotion] = useState(false);
+  const [isHover, setIsHover] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [userPaused, setUserPaused] = useState(false); // only for videos
+  const [isVisible, setIsVisible] = useState(true);
+
+  const stageRef = React.useRef<HTMLDivElement>(null);
+  const videoRef = React.useRef<HTMLVideoElement | null>(null);
 
   const next = () => setIndex((i) => (i + 1) % items.length);
   const prev = () => setIndex((i) => (i - 1 + items.length) % items.length);
@@ -89,14 +103,29 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
     return () => mq?.removeEventListener?.("change", update);
   }, []);
 
+  const active = items[index];
+
+  // Observe visibility to auto-pause when carousel is off-screen
+  useEffect(() => {
+    if (!stageRef.current || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      (entries) => setIsVisible(entries[0]?.isIntersecting ?? true),
+      { threshold: 0.2 }
+    );
+    io.observe(stageRef.current);
+    return () => io.disconnect();
+  }, []);
+
+  // Auto-advance with per-item dwell; pause on hover/drag/offscreen; respect userPaused for videos
   useEffect(() => {
     if (isReducedMotion || items.length <= 1) return;
+    if (!isVisible) return;
+    if (isHover || isDragging) return;
+    if (active.type === "video" && userPaused) return;
 
-    const active = items[index];
-    // Tune these however you like:
-    const DELAY_IMAGE = 6000;   // 6s for images
-    const DELAY_VIDEO = 14000;  // 14s for videos (longer linger)
-    const DELAY_MODEL = 16000;  // 16s for GLB models
+    const DELAY_IMAGE = 6000;
+    const DELAY_VIDEO = 14000;
+    const DELAY_MODEL = 16000;
 
     const delay =
       active.type === "video" ? DELAY_VIDEO :
@@ -105,28 +134,51 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
 
     const t = setTimeout(next, delay);
     return () => clearTimeout(t);
-    // depend on index so each new slide schedules its own timeout
-  }, [index, items, isReducedMotion]);
+  }, [index, items, isReducedMotion, isHover, isDragging, isVisible, userPaused, active]);
 
+  // Control video playback to save battery
+  useEffect(() => {
+    const vid = videoRef.current;
+    if (!vid) return;
+    const shouldPlay = isVisible && !isHover && !isDragging && !userPaused;
+    if (shouldPlay) {
+      vid.play().catch(() => {/* ignore autoplay errors */});
+    } else {
+      vid.pause();
+    }
+  }, [active, isVisible, isHover, isDragging, userPaused]);
 
-  const active = items[index];
-
-  // Touch swipe
+  // Touch + mouse drag handling
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
-  const onTouchStart = (e: React.TouchEvent) => setTouchStartX(e.touches[0].clientX);
-  const onTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX == null) return;
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    if (dx > 40) prev();
-    if (dx < -40) next();
-    setTouchStartX(null);
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+    setIsDragging(true);
   };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX != null) {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      if (dx > 40) prev();
+      if (dx < -40) next();
+    }
+    setTouchStartX(null);
+    setIsDragging(false);
+  };
+  const onMouseDown = () => setIsDragging(true);
+  const onMouseUp = () => setIsDragging(false);
+
+  const showPlayButton = active.type === "video";
+  const isVideoPlaying = showPlayButton && !(userPaused || isHover || isDragging || !isVisible);
 
   return (
     <div className="relative rounded-3xl bg-gradient-to-br from-zinc-900 to-blue-900/40 p-3 shadow-2xl">
       <div
+        ref={stageRef}
         className="relative w-full overflow-hidden rounded-2xl ring-1 ring-white/10"
         style={{ aspectRatio: "4 / 5" }}
+        onMouseEnter={() => setIsHover(true)}
+        onMouseLeave={() => setIsHover(false)}
+        onMouseDown={onMouseDown}
+        onMouseUp={onMouseUp}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
@@ -136,6 +188,7 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
 
         {active.type === "video" && (
           <video
+            ref={videoRef}
             preload="metadata"
             src={active.src}
             className="h-full w-full object-cover"
@@ -147,11 +200,12 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
         )}
 
         {active.type === "model" && (
-          <model-viewer
+          <ModelViewer
             src={active.src}
             poster={(active as any).poster}
             camera-controls
-            auto-rotate
+            // Only rotate while visible and not interacting
+            {...(isVisible && !isHover && !isDragging ? { "auto-rotate": "" } : {})}
             shadow-intensity={0.8}
             exposure={0.9}
             ar
@@ -159,7 +213,17 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
           />
         )}
 
-        {/* Controls */}
+        {/* Play/Pause overlay for videos */}
+        {showPlayButton && (
+          <button
+            onClick={() => setUserPaused((p) => !p)}
+            className="absolute left-4 bottom-4 rounded-full bg-black/60 px-3 py-2 text-white text-sm backdrop-blur border border-white/10"
+          >
+            {isVideoPlaying ? "❚❚ Pause" : "▶ Play"}
+          </button>
+        )}
+
+        {/* Nav controls */}
         <>
           <button
             aria-label="Previous"
@@ -183,7 +247,10 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
         {items.map((it, i) => (
           <button
             key={it.id}
-            onClick={() => setIndex(i)}
+            onClick={() => {
+              setIndex(i);
+              setUserPaused(false); // reset manual pause when switching slides
+            }}
             className={`aspect-[4/3] overflow-hidden rounded-xl ring-1 ${i === index ? "ring-blue-500" : "ring-white/10"}`}
             title={it.alt}
           >
@@ -206,6 +273,7 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
     </div>
   );
 }
+/* ================================================================ */
 
 function ModelShowcase({ model, onSwitch }: { model: keyof typeof MODELS; onSwitch: (m: keyof typeof MODELS) => void }) {
   const items = MEDIA[model] ?? [];
@@ -385,12 +453,10 @@ export default function PreorderPage() {
     setStage("ship");
   };
 
-  const shippingSubmit = () => {
-    setStage("summary");
-  };
+  const shippingSubmit = () => setStage("summary");
 
   const FloatingCheckout = () => (
-    <div className="fixed bottom-4 right-4 left-4 md:left-auto md:w-[28rem] z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+    <div className="fixed bottom-4 right-4 left-4 md:left-auto md:w-[28rem] z-50" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
       <div className="rounded-3xl border border-white/10 bg-zinc-950/80 backdrop-blur p-4 shadow-2xl">
         <div className="flex items-center justify-between gap-4">
           <div>
@@ -398,8 +464,8 @@ export default function PreorderPage() {
             <p className="text-2xl font-semibold text-white">${usdTotal}</p>
           </div>
           <div className="flex gap-2">
-            <button onClick={()=>simulatePayment("crypto")} className="rounded-xl bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 text-sm font-medium">SOL / USDC</button>
-            <button onClick={()=>simulatePayment("fiat")} className="rounded-xl bg-white text-black px-4 py-2 text-sm font-medium">Card</button>
+            <button onClick={() => simulatePayment("crypto")} className="rounded-xl bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 text-sm font-medium">SOL / USDC</button>
+            <button onClick={() => simulatePayment("fiat")} className="rounded-xl bg-white text-black px-4 py-2 text-sm font-medium">Card</button>
           </div>
         </div>
         <div className="mt-2 flex items-center gap-3 text-xs text-zinc-500">

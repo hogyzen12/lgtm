@@ -9,7 +9,7 @@ declare namespace JSX {
       'shadow-intensity'?: number | string;
       exposure?: number | string;
       'environment-image'?: string;
-      'ios-src'?: string;
+      'ios-src'?: string; // if you add a .usdz later
     };
   }
 }
