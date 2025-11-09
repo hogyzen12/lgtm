@@ -6,13 +6,109 @@ import React, { useEffect, useState } from "react";
 const ModelViewer: React.FC<any> = (props) =>
   React.createElement("model-viewer" as any, props);
 
-// --- Config (adjust freely) ---
+/* ======================= SolanaStaticRing (no animation) ======================= */
+/**
+ * Static Solana gradient border ONLY (no motion).
+ * - Inner card remains semi-opaque; gradient is confined to the border ring.
+ * - Uses padding-box/border-box mask trick; optional soft halo.
+ */
+function SolanaStaticRing({
+  children,
+  className = "rounded-3xl",
+  padding = 24,
+  thickness = 2,
+  halo = true,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  padding?: number;
+  thickness?: number;
+  halo?: boolean;
+}) {
+  const ring = `${thickness}px`;
+  return (
+    <div className={`relative ${className}`}>
+      <style>{`
+        .ssr-base {
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          border: 1px solid rgba(255,255,255,0.10);
+          pointer-events: none;
+        }
+        .ssr-ring {
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          padding: ${ring};
+          background:
+            conic-gradient(
+              from 0deg,
+              #9945FF 0%,
+              #8752F3 12%,
+              #5497D5 24%,
+              #43B4CA 36%,
+              #39D0D8 50%,
+              #2CE3A2 64%,
+              #94F7C5 78%,
+              #9945FF 100%
+            );
+          -webkit-mask:
+            linear-gradient(#000 0 0) content-box,
+            linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+                  mask-composite: exclude;
+          pointer-events: none;
+        }
+        .ssr-halo {
+          position: absolute;
+          inset: -12px;
+          border-radius: inherit;
+          padding: ${ring};
+          background:
+            conic-gradient(
+              from 0deg,
+              rgba(153,69,255,0.8),
+              rgba(135,82,243,0.7),
+              rgba(84,151,213,0.6),
+              rgba(67,180,202,0.6),
+              rgba(57,208,216,0.6),
+              rgba(44,227,162,0.6),
+              rgba(148,247,197,0.6),
+              rgba(153,69,255,0.8)
+            );
+          -webkit-mask:
+            linear-gradient(#000 0 0) content-box,
+            linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+                  mask-composite: exclude;
+          filter: blur(18px);
+          opacity: 0.22;
+          pointer-events: none;
+        }
+      `}</style>
+
+      <div className="ssr-base" aria-hidden />
+      <div className="ssr-ring" aria-hidden />
+      {halo && <div className="ssr-halo" aria-hidden />}
+
+      {/* Content body (no gradient wash inside) */}
+      <div
+        className="relative rounded-[inherit] bg-white/5 border border-white/10 backdrop-blur"
+        style={{ padding }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* =========================== Config / Assets =========================== */
 const MODELS = {
   plastic: { name: "Plastic", usd: 42 },
   aluminium: { name: "Aluminium", usd: 69 },
-};
+} as const;
 
-// Media assets per model
 type MediaItem =
   | { id: string; type: "image"; src: string; alt: string }
   | { id: string; type: "video"; src: string; alt: string }
@@ -31,11 +127,11 @@ const MEDIA: Record<keyof typeof MODELS, MediaItem[]> = {
   ],
 };
 
-const INVENTORY_TOTAL = 4200; // shared pool of physical units (bundle counts as 2)
+const INVENTORY_TOTAL = 4200; // shared pool; bundle counts as 2 units
 
-/* ===================== Prices / Utils ===================== */
+/* =========================== Price mock =========================== */
 function useMockSolPrice() {
-  const [solPrice, setSolPrice] = useState(200); // USD per SOL (mock)
+  const [solPrice, setSolPrice] = useState(200);
   useEffect(() => {
     const id = setInterval(() => {
       setSolPrice((p) => Math.max(5, +(p + (Math.random() - 0.5) * 0.6).toFixed(2)));
@@ -45,7 +141,7 @@ function useMockSolPrice() {
   return solPrice;
 }
 
-/* ======================= UI atoms ======================== */
+/* =========================== UI atoms =========================== */
 const Badge = ({ children }: { children: React.ReactNode }) => (
   <span className="inline-flex items-center rounded-full bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-300 ring-1 ring-inset ring-blue-500/30">
     {children}
@@ -74,7 +170,7 @@ function Navbar() {
   );
 }
 
-/* =================== Polished Media Carousel =================== */
+/* =================== Media Carousel =================== */
 function MediaCarousel({ items }: { items: MediaItem[] }) {
   const [index, setIndex] = useState(0);
   const [isReducedMotion, setIsReducedMotion] = useState(false);
@@ -101,28 +197,19 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
 
   useEffect(() => {
     if (!stageRef.current || typeof IntersectionObserver === "undefined") return;
-    const io = new IntersectionObserver(
-      (entries) => setIsVisible(entries[0]?.isIntersecting ?? true),
-      { threshold: 0.2 }
-    );
+    const io = new IntersectionObserver((entries) => setIsVisible(entries[0]?.isIntersecting ?? true), { threshold: 0.2 });
     io.observe(stageRef.current);
     return () => io.disconnect();
   }, []);
 
   useEffect(() => {
     if (isReducedMotion || items.length <= 1) return;
-    if (!isVisible) return;
-    if (isHover || isDragging) return;
+    if (!isVisible || isHover || isDragging) return;
     if (active.type === "video" && userPaused) return;
 
-    const DELAY_IMAGE = 6000;
-    const DELAY_VIDEO = 14000;
-    const DELAY_MODEL = 16000;
-
     const delay =
-      active.type === "video" ? DELAY_VIDEO :
-      active.type === "model" ? DELAY_MODEL :
-      DELAY_IMAGE;
+      active.type === "video" ? 14000 :
+      active.type === "model" ? 16000 : 6000;
 
     const t = setTimeout(next, delay);
     return () => clearTimeout(t);
@@ -132,27 +219,21 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
     const vid = videoRef.current;
     if (!vid) return;
     const shouldPlay = isVisible && !isHover && !isDragging && !userPaused;
-    if (shouldPlay) {
-      vid.play().catch(() => {});
-    } else {
-      vid.pause();
-    }
+    if (shouldPlay) void vid.play().catch(() => {});
+    else vid.pause();
   }, [active, isVisible, isHover, isDragging, userPaused]);
 
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
-  const onTouchStart = (e: React.TouchEvent) => {
-    setTouchStartX(e.touches[0].clientX);
-    setIsDragging(true);
-  };
+  const onTouchStart = (e: React.TouchEvent) => { setTouchStartX(e.touches[0].clientX); setIsDragging(true); };
   const onTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX != null) {
       const dx = e.changedTouches[0].clientX - touchStartX;
       if (dx > 40) prev();
       if (dx < -40) next();
     }
-    setTouchStartX(null);
-    setIsDragging(false);
+    setTouchStartX(null); setIsDragging(false);
   };
+
   const onMouseDown = () => setIsDragging(true);
   const onMouseUp = () => setIsDragging(false);
 
@@ -175,7 +256,6 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
         {active.type === "image" && (
           <img loading="lazy" src={active.src} alt={active.alt} className="h-full w-full object-cover" />
         )}
-
         {active.type === "video" && (
           <video
             ref={videoRef}
@@ -188,7 +268,6 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
             playsInline
           />
         )}
-
         {active.type === "model" && (
           <ModelViewer
             src={active.src}
@@ -233,10 +312,7 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
         {items.map((it, i) => (
           <button
             key={it.id}
-            onClick={() => {
-              setIndex(i);
-              setUserPaused(false);
-            }}
+            onClick={() => { setIndex(i); setUserPaused(false); }}
             className={`aspect-[4/3] overflow-hidden rounded-xl ring-1 ${i === index ? "ring-blue-500" : "ring-white/10"}`}
             title={it.alt}
           >
@@ -250,7 +326,7 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
   );
 }
 
-/* ======================= Cart system (incl. bundle) ======================= */
+/* ======================= Cart system (with bundle SKU) ======================= */
 type Sku = "plastic" | "aluminium" | "bundle";
 
 const SKU_NAMES: Record<Sku, string> = {
@@ -266,7 +342,6 @@ const SKU_PRICES: Record<Sku, number> = {
 
 type CartItem = { sku: Sku; name: string; unitUsd: number; qty: number };
 type Cart = { [k in Sku]?: CartItem };
-
 const emptyCart: Cart = {};
 
 function useLocalStorageCart(key = "unruggable:cart") {
@@ -287,10 +362,7 @@ function useLocalStorageCart(key = "unruggable:cart") {
     setCart((c) => {
       const base = c[sku];
       const nextQty = Math.max(1, (base?.qty ?? 0) + qty);
-      return {
-        ...c,
-        [sku]: { sku, name: SKU_NAMES[sku], unitUsd: SKU_PRICES[sku], qty: nextQty },
-      };
+      return { ...c, [sku]: { sku, name: SKU_NAMES[sku], unitUsd: SKU_PRICES[sku], qty: nextQty } };
     });
 
   const setQty = (sku: Sku, qty: number) =>
@@ -299,10 +371,7 @@ function useLocalStorageCart(key = "unruggable:cart") {
         const { [sku]: _, ...rest } = c;
         return rest;
       }
-      return {
-        ...c,
-        [sku]: { sku, name: SKU_NAMES[sku], unitUsd: SKU_PRICES[sku], qty },
-      };
+      return { ...c, [sku]: { sku, name: SKU_NAMES[sku], unitUsd: SKU_PRICES[sku], qty } };
     });
 
   const remove = (sku: Sku) =>
@@ -356,93 +425,93 @@ function BuyBox({
 }) {
   const usd = MODELS[model].usd;
   const sol = usd / solPrice;
-
   const save = 42 + 69 - 99; // 12
 
   return (
-    <div id="buy" className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur shadow-xl">
-      <div className="mb-2"><Badge>Pre-Order</Badge></div>
-      <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-white mb-2">Unruggable Unit ONE</h1>
-      <p className="text-zinc-300 mb-6">Choose model → set quantity → add to basket.</p>
+    <SolanaStaticRing className="rounded-3xl" thickness={2}>
+      <div id="buy">
+        <div className="mb-2"><Badge>Pre-Order</Badge></div>
+        <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-white mb-2">Unruggable Unit ONE</h1>
+        <p className="text-zinc-300 mb-6">Choose model → set quantity → add to basket.</p>
 
-      {/* Model selector */}
-      <div className="grid grid-cols-2 gap-2 mb-4">
-        {(Object.entries(MODELS) as [keyof typeof MODELS, (typeof MODELS)[keyof typeof MODELS]][]).map(([id, m]) => (
-          <button
-            key={id}
-            onClick={() => setModel(id)}
-            className={`rounded-xl border px-3 py-2 text-sm ${model === id ? "border-blue-500/60 bg-blue-500/10 text-blue-200" : "border-white/10 text-zinc-300 hover:border-white/20"}`}
-          >
-            {m.name}
-          </button>
-        ))}
-      </div>
-
-      {/* Quantity */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3 rounded-2xl border border-white/10 p-2">
-          <button aria-label="Decrease quantity" onClick={() => setQty(Math.max(1, qty - 1))} className="h-9 w-9 grid place-items-center rounded-xl bg-white/5">−</button>
-          <span className="w-10 text-center" aria-live="polite">{qty}</span>
-          <button aria-label="Increase quantity" onClick={() => setQty(qty + 1)} className="h-9 w-9 grid place-items-center rounded-xl bg-white/5">+</button>
+        {/* Model selector */}
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          {(Object.entries(MODELS) as [keyof typeof MODELS, (typeof MODELS)[keyof typeof MODELS]][]).map(([id, m]) => (
+            <button
+              key={id}
+              onClick={() => setModel(id)}
+              className={`rounded-xl border px-3 py-2 text-sm ${model === id ? "border-blue-500/60 bg-blue-500/10 text-blue-200" : "border-white/10 text-zinc-300 hover:border-white/20"}`}
+            >
+              {m.name}
+            </button>
+          ))}
         </div>
-        <p className="text-xs text-zinc-400">Buy multiples in one go.</p>
-      </div>
 
-      {/* Pricing row */}
-      <div className="rounded-2xl border border-white/10 p-4 mb-4">
-        <div className="flex items-baseline justify-between">
-          <div className="text-zinc-300">Price (per unit)</div>
-          <div className="text-2xl font-semibold">${usd}</div>
-        </div>
-        <div className="mt-2 text-sm text-zinc-400">
-          ≈ {sol.toFixed(3)} SOL · {usd} USDC
-          <span className="ml-2 text-xs">(SOL updates live)</span>
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div className="grid sm:grid-cols-3 gap-3 mb-3">
-        <button
-          onClick={() => onAddSku(model as Sku, qty)}
-          className="sm:col-span-2 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 font-medium shadow-lg shadow-blue-600/25"
-        >
-          Add to Basket
-          <div className="text-xs text-blue-100/90">Plastic/Aluminium supported</div>
-        </button>
-        <button
-          onClick={() => onPayFromCart("crypto")}
-          className="rounded-2xl bg-white/10 hover:bg-white/15 text-white px-4 py-3 font-medium border border-white/15"
-        >
-          Go to Checkout
-          <div className="text-xs text-white/70">SOL/USDC or Card</div>
-        </button>
-      </div>
-
-      {/* 🔥 Bundle Upsell */}
-      <div className="rounded-2xl border border-amber-400/30 bg-amber-500/10 p-4 mb-3">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="text-white font-medium">Bundle: 1× Aluminium + 1× Plastic</div>
-            <div className="text-xs text-amber-200/90 mt-1">Save ${save} vs buying separately · Only <span className="font-semibold">$99</span></div>
+        {/* Quantity */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3 rounded-2xl border border-white/10 p-2">
+            <button aria-label="Decrease quantity" onClick={() => setQty(Math.max(1, qty - 1))} className="h-9 w-9 grid place-items-center rounded-xl bg-white/5">−</button>
+            <span className="w-10 text-center" aria-live="polite">{qty}</span>
+            <button aria-label="Increase quantity" onClick={() => setQty(qty + 1)} className="h-9 w-9 grid place-items-center rounded-xl bg-white/5">+</button>
           </div>
+          <p className="text-xs text-zinc-400">Buy multiples in one go.</p>
+        </div>
+
+        {/* Pricing row */}
+        <div className="rounded-2xl border border-white/10 p-4 mb-4">
+          <div className="flex items-baseline justify-between">
+            <div className="text-zinc-300">Price (per unit)</div>
+            <div className="text-2xl font-semibold">${usd}</div>
+          </div>
+          <div className="mt-2 text-sm text-zinc-400">
+            ≈ {sol.toFixed(3)} SOL · {usd} USDC
+            <span className="ml-2 text-xs">(SOL updates live)</span>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="grid sm:grid-cols-3 gap-3 mb-3">
           <button
-            onClick={() => onAddSku("bundle", 1)}
-            className="rounded-xl bg-amber-400 hover:bg-amber-300 text-black px-3 py-2 text-sm font-semibold shadow"
+            onClick={() => onAddSku(model as Sku, qty)}
+            className="sm:col-span-2 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 font-medium shadow-lg shadow-blue-600/25"
           >
-            Add Bundle — $99
+            Add to Basket
+            <div className="text-xs text-blue-100/90">Plastic/Aluminium supported</div>
+          </button>
+          <button
+            onClick={() => onPayFromCart("crypto")}
+            className="rounded-2xl bg-white/10 hover:bg-white/15 text-white px-4 py-3 font-medium border border-white/15"
+          >
+            Go to Checkout
+            <div className="text-xs text-white/70">SOL/USDC or Card</div>
           </button>
         </div>
+
+        {/* 🔥 Bundle Upsell */}
+        <div className="rounded-2xl border border-amber-400/30 bg-amber-500/10 p-4 mb-3">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="text-white font-medium">Bundle: 1× Aluminium + 1× Plastic</div>
+              <div className="text-xs text-amber-200/90 mt-1">Save ${save} vs buying separately · Only <span className="font-semibold">$99</span></div>
+            </div>
+            <button
+              onClick={() => onAddSku("bundle", 1)}
+              className="rounded-xl bg-amber-400 hover:bg-amber-300 text-black px-3 py-2 text-sm font-semibold shadow"
+            >
+              Add Bundle — $99
+            </button>
+          </div>
+        </div>
+
+        {/* Inventory */}
+        <div className="text-sm text-zinc-300 mb-2">{INVENTORY_TOTAL} total · {remaining} remaining</div>
+        <Progress value={((INVENTORY_TOTAL - remaining) / INVENTORY_TOTAL) * 100} />
+
+        <p className="mt-4 text-xs text-zinc-400">
+          Ships in Q2 2026 · Customs & duties paid by you · Non-UK shipping paid by you.
+        </p>
       </div>
-
-      {/* Inventory */}
-      <div className="text-sm text-zinc-300 mb-2">{INVENTORY_TOTAL} total · {remaining} remaining</div>
-      <Progress value={((INVENTORY_TOTAL - remaining) / INVENTORY_TOTAL) * 100} />
-
-      {/* Shipping note */}
-      <p className="mt-4 text-xs text-zinc-400">
-        Ships in Q2 2026 · Customs & duties paid by you · Non-UK shipping paid by you.
-      </p>
-    </div>
+    </SolanaStaticRing>
   );
 }
 
@@ -553,74 +622,78 @@ function MiniCartSheet({
         className={`fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`}
         aria-label="Close basket"
       />
-      {/* sheet */}
-      <div className="relative mx-auto max-w-2xl rounded-t-3xl border border-white/10 bg-zinc-950 p-5">
-        <div className="mx-auto h-1.5 w-10 rounded-full bg-white/15 mb-3" />
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-semibold text-white">Your Basket</h3>
-          <div className="flex items-center gap-3">
-            <button onClick={onClear} className="text-xs text-zinc-400 hover:text-zinc-200">Clear</button>
-            <button onClick={onClose} className="rounded-lg bg-white/10 px-3 py-1 text-sm">Close</button>
+      {/* sheet with static Solana ring */}
+      <div className="relative mx-auto max-w-2xl px-3 pb-3">
+        <SolanaStaticRing className="rounded-t-3xl rounded-b-3xl md:rounded-3xl" padding={16} thickness={2}>
+          <div className="p-2 md:p-2">
+            <div className="mx-auto h-1.5 w-10 rounded-full bg-white/15 mb-3" />
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-white">Your Basket</h3>
+              <div className="flex items-center gap-3">
+                <button onClick={onClear} className="text-xs text-zinc-300 hover:text-white">Clear</button>
+                <button onClick={onClose} className="rounded-lg bg-white/10 px-3 py-1 text-sm">Close</button>
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-3">
+              {items.length === 0 ? (
+                <div className="rounded-2xl border border-white/10 p-6 text-center text-zinc-400">Your basket is empty.</div>
+              ) : (
+                items.map((it) => (
+                  <MiniCartRow
+                    key={it.sku}
+                    item={it}
+                    onInc={() => onInc(it.sku)}
+                    onDec={() => onDec(it.sku)}
+                    onRemove={() => onRemove(it.sku)}
+                  />
+                ))
+              )}
+            </div>
+
+            {/* Totals */}
+            <div className="mt-4 rounded-2xl border border-white/10 p-4">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-zinc-300">Subtotal</span>
+                <span className="text-white font-medium">${usdSubtotal}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs mt-1 text-zinc-400">
+                <span>≈</span>
+                <span>{solTotal.toFixed(3)} SOL · pays in USDC or SOL</span>
+              </div>
+            </div>
+
+            {/* Pay actions */}
+            <div className="mt-4 grid sm:grid-cols-2 gap-3">
+              <button
+                onClick={() => onPay("crypto")}
+                disabled={items.length === 0}
+                className="rounded-2xl bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-500 text-white px-4 py-3 font-medium shadow-lg shadow-blue-600/25"
+              >
+                Buy with SOL / USDC
+                <div className="text-xs text-blue-100/90">via HelioPay · token selectable</div>
+              </button>
+              <button
+                onClick={() => onPay("fiat")}
+                disabled={items.length === 0}
+                className="rounded-2xl bg-white disabled:opacity-50 disabled:cursor-not-allowed text-black px-4 py-3 font-medium"
+              >
+                Card / Apple Pay
+                <div className="text-xs text-black/70">via Coinflow</div>
+              </button>
+            </div>
+
+            <p className="mt-3 text-xs text-zinc-500">
+              Ships in Q2 2026 · Customs & duties paid by you · Non-UK shipping paid by you.
+            </p>
           </div>
-        </div>
-
-        <div className="mt-4 grid gap-3">
-          {items.length === 0 ? (
-            <div className="rounded-2xl border border-white/10 p-6 text-center text-zinc-400">Your basket is empty.</div>
-          ) : (
-            items.map((it) => (
-              <MiniCartRow
-                key={it.sku}
-                item={it}
-                onInc={() => onInc(it.sku)}
-                onDec={() => onDec(it.sku)}
-                onRemove={() => onRemove(it.sku)}
-              />
-            ))
-          )}
-        </div>
-
-        {/* Totals */}
-        <div className="mt-4 rounded-2xl border border-white/10 p-4">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-zinc-300">Subtotal</span>
-            <span className="text-white font-medium">${usdSubtotal}</span>
-          </div>
-          <div className="flex items-center justify-between text-xs mt-1 text-zinc-400">
-            <span>≈</span>
-            <span>{solTotal.toFixed(3)} SOL · pays in USDC or SOL</span>
-          </div>
-        </div>
-
-        {/* Pay actions */}
-        <div className="mt-4 grid sm:grid-cols-2 gap-3">
-          <button
-            onClick={() => onPay("crypto")}
-            disabled={items.length === 0}
-            className="rounded-2xl bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-500 text-white px-4 py-3 font-medium shadow-lg shadow-blue-600/25"
-          >
-            Buy with SOL / USDC
-            <div className="text-xs text-blue-100/90">via HelioPay · token selectable</div>
-          </button>
-          <button
-            onClick={() => onPay("fiat")}
-            disabled={items.length === 0}
-            className="rounded-2xl bg-white disabled:opacity-50 disabled:cursor-not-allowed text-black px-4 py-3 font-medium"
-          >
-            Card / Apple Pay
-            <div className="text-xs text-black/70">via Coinflow</div>
-          </button>
-        </div>
-
-        <p className="mt-3 text-xs text-zinc-500">
-          Ships in Q2 2026 · Customs & duties paid by you · Non-UK shipping paid by you.
-        </p>
+        </SolanaStaticRing>
       </div>
     </div>
   );
 }
 
-/* ===================== Inline Info Buttons (now 6) ===================== */
+/* ===================== Inline Info Dock (6 buttons) ===================== */
 type DockKey = "faq" | "about" | "shipping" | "specs" | "partners" | "support";
 
 function InlineInfoDock({
@@ -634,7 +707,7 @@ function InlineInfoDock({
 
   return (
     <div className="mt-6">
-      {/* Compact 3x2 buttons, confined to the right column */}
+      {/* Compact 3x2 grid on desktop; 2x3 on small */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
         {([
           { id: "faq", label: "FAQ" },
@@ -658,19 +731,21 @@ function InlineInfoDock({
         ))}
       </div>
 
-      {/* Expandable panel */}
+      {/* Expandable panel with static Solana border */}
       <div
         className={`overflow-hidden transition-all duration-300 ${openKey ? "mt-4 max-h-[32rem]" : "max-h-0"}`}
         aria-live="polite"
       >
-        <div className="rounded-3xl border border-white/10 bg-zinc-950/85 backdrop-blur p-5">
-          {openKey === "faq" && <DockFAQ />}
-          {openKey === "about" && <DockAbout />}
-          {openKey === "shipping" && <DockShipping />}
-          {openKey === "specs" && <DockSpecs />}
-          {openKey === "partners" && <DockPartners />}
-          {openKey === "support" && <DockSupport />}
-        </div>
+        {openKey && (
+          <SolanaStaticRing className="rounded-3xl" padding={20} thickness={2}>
+            {openKey === "faq" && <DockFAQ />}
+            {openKey === "about" && <DockAbout />}
+            {openKey === "shipping" && <DockShipping />}
+            {openKey === "specs" && <DockSpecs />}
+            {openKey === "partners" && <DockPartners />}
+            {openKey === "support" && <DockSupport />}
+          </SolanaStaticRing>
+        )}
       </div>
     </div>
   );
@@ -733,7 +808,6 @@ function DockSpecs() {
   );
 }
 function DockPartners() {
-  // simple placeholder grid; swap with logo <img>s when you have assets
   const partners = [
     "HELIUS","PHASE LABS","RADIANTS","RAPOSA","ADRASTEA","GOJIRA",
     "The Library","SAGADAO","Solana Foundation","SolBlaze","SENTINEL","MetaDAO",
@@ -758,14 +832,14 @@ function DockSupport() {
       <div className="flex items-center justify-center gap-2"><Badge>Support</Badge></div>
       <div className="text-2xl font-semibold text-white">We’re here to help</div>
       <div className="flex items-center justify-center gap-6 pt-1">
-        <a href="#" className="text-3xl">🗨️</a>
-        <a href="mailto:support@example.com" className="text-3xl">✉️</a>
+        <a href="#" className="text-3xl" aria-label="Discord">🗨️</a>
+        <a href="mailto:support@example.com" className="text-3xl" aria-label="Email">✉️</a>
       </div>
     </div>
   );
 }
 
-/* ========================= Section (for post-purchase) ========================= */
+/* ========================= Section (post-purchase) ========================= */
 function Section({ id, eyebrow, title, children }: { id: string; eyebrow: string; title: string; children: React.ReactNode; }) {
   return (
     <section id={id} className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
@@ -778,7 +852,7 @@ function Section({ id, eyebrow, title, children }: { id: string; eyebrow: string
   );
 }
 
-/* ======================= Page (wired) ======================= */
+/* ================================== Page ================================== */
 export default function PreorderPage() {
   const [model, setModel] = useState<keyof typeof MODELS>("plastic");
   const [qty, setQty] = useState(1);
@@ -788,23 +862,16 @@ export default function PreorderPage() {
 
   const { items, count, usdSubtotal, add, setQty: setCartQty, remove, clear } = useLocalStorageCart();
 
-  // snapshot after "payment"
   const [purchasedItems, setPurchasedItems] = useState<CartItem[]>([]);
   const [purchasedTotal, setPurchasedTotal] = useState(0);
-
-  // minicart sheet state
   const [cartOpen, setCartOpen] = useState(false);
-
-  // info dock state (under BuyBox)
   const [dockOpen, setDockOpen] = useState<null | DockKey>(null);
 
   const handleAddSku = (sku: Sku, q: number) => add(sku, q);
 
-  // payment uses CART and decrements inventory by units (bundle = 2)
   const simulatePayment = (_type: "crypto" | "fiat") => {
     const totalUnits = items.reduce((n, it) => n + it.qty * (it.sku === "bundle" ? 2 : 1), 0);
     if (totalUnits === 0) return;
-
     setRemaining((r) => Math.max(0, r - totalUnits));
     setPurchasedItems(items);
     setPurchasedTotal(usdSubtotal);
@@ -827,7 +894,6 @@ export default function PreorderPage() {
                 <ModelShowcase model={model} onSwitch={setModel} />
               </div>
 
-              {/* Right column: BuyBox + compact info buttons underneath */}
               <div className="lg:col-span-6">
                 <BuyBox
                   model={model}
@@ -868,25 +934,22 @@ export default function PreorderPage() {
       {/* 2) After payment */}
       {stage === "ship" && (
         <Section id="shipping" eyebrow="Next step" title="Shipping details">
-          {/* Pick first item just for a small recap line; shipping form itself is unchanged */}
-          <div className="mx-auto max-w-2xl rounded-3xl border border-white/10 bg-white/5 p-6">
-            <h2 className="text-xl font-semibold text-white">Success! Complete shipping</h2>
-            <p className="text-sm text-zinc-400 mt-1">
-              Ships in 2026. Customs/duties paid by you. Non-UK shipping paid by you. You can edit your address until production begins.
-            </p>
-            {/* Minimal shipping form placeholder — use your existing form here if preferred */}
-          </div>
-          <div className="mt-6">
-            <button onClick={shippingSubmit} className="rounded-xl bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5">
-              Continue
-            </button>
-          </div>
+          <SolanaStaticRing>
+            <div className="text-sm text-zinc-300">
+              Success! Add your address details (placeholder).
+            </div>
+            <div className="mt-4">
+              <button onClick={shippingSubmit} className="rounded-xl bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5">
+                Continue
+              </button>
+            </div>
+          </SolanaStaticRing>
         </Section>
       )}
 
       {stage === "summary" && (
         <Section id="summary" eyebrow="All set" title="Thanks for your preorder!">
-          <div className="mx-auto max-w-2xl rounded-3xl border border-white/10 bg-white/5 p-6">
+          <SolanaStaticRing>
             <h2 className="text-2xl font-semibold text-white">Order summary</h2>
             <div className="mt-4 rounded-2xl border border-white/10 p-4 grid gap-2">
               {purchasedItems.map((it) => (
@@ -903,11 +966,11 @@ export default function PreorderPage() {
                 <div>Status</div><div className="text-emerald-400">Awaiting Production</div>
               </div>
             </div>
-          </div>
+          </SolanaStaticRing>
         </Section>
       )}
 
-      {/* Footer only */}
+      {/* Footer */}
       <footer className="mt-10 border-t border-white/10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 items-center justify-between gap-4">
           <div className="flex items-center gap-3 text-zinc-400"><span className="text-xl">🐸</span><span>© {new Date().getFullYear()} Unruggable</span></div>
