@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import HelioPayModal, { type HelioPayMethod } from "./HelioPayModal";
 
 /** ------------------------------------------------------------------
  * ModelViewer wrapper (fixes TS2339 without .d.ts or peer deps)
@@ -6,109 +7,13 @@ import React, { useEffect, useState } from "react";
 const ModelViewer: React.FC<any> = (props) =>
   React.createElement("model-viewer" as any, props);
 
-/* ======================= SolanaStaticRing (no animation) ======================= */
-/**
- * Static Solana gradient border ONLY (no motion).
- * - Inner card remains semi-opaque; gradient is confined to the border ring.
- * - Uses padding-box/border-box mask trick; optional soft halo.
- */
-function SolanaStaticRing({
-  children,
-  className = "rounded-3xl",
-  padding = 24,
-  thickness = 2,
-  halo = true,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  padding?: number;
-  thickness?: number;
-  halo?: boolean;
-}) {
-  const ring = `${thickness}px`;
-  return (
-    <div className={`relative ${className}`}>
-      <style>{`
-        .ssr-base {
-          position: absolute;
-          inset: 0;
-          border-radius: inherit;
-          border: 1px solid rgba(255,255,255,0.10);
-          pointer-events: none;
-        }
-        .ssr-ring {
-          position: absolute;
-          inset: 0;
-          border-radius: inherit;
-          padding: ${ring};
-          background:
-            conic-gradient(
-              from 0deg,
-              #9945FF 0%,
-              #8752F3 12%,
-              #5497D5 24%,
-              #43B4CA 36%,
-              #39D0D8 50%,
-              #2CE3A2 64%,
-              #94F7C5 78%,
-              #9945FF 100%
-            );
-          -webkit-mask:
-            linear-gradient(#000 0 0) content-box,
-            linear-gradient(#000 0 0);
-          -webkit-mask-composite: xor;
-                  mask-composite: exclude;
-          pointer-events: none;
-        }
-        .ssr-halo {
-          position: absolute;
-          inset: -12px;
-          border-radius: inherit;
-          padding: ${ring};
-          background:
-            conic-gradient(
-              from 0deg,
-              rgba(153,69,255,0.8),
-              rgba(135,82,243,0.7),
-              rgba(84,151,213,0.6),
-              rgba(67,180,202,0.6),
-              rgba(57,208,216,0.6),
-              rgba(44,227,162,0.6),
-              rgba(148,247,197,0.6),
-              rgba(153,69,255,0.8)
-            );
-          -webkit-mask:
-            linear-gradient(#000 0 0) content-box,
-            linear-gradient(#000 0 0);
-          -webkit-mask-composite: xor;
-                  mask-composite: exclude;
-          filter: blur(18px);
-          opacity: 0.22;
-          pointer-events: none;
-        }
-      `}</style>
-
-      <div className="ssr-base" aria-hidden />
-      <div className="ssr-ring" aria-hidden />
-      {halo && <div className="ssr-halo" aria-hidden />}
-
-      {/* Content body (no gradient wash inside) */}
-      <div
-        className="relative rounded-[inherit] bg-white/5 border border-white/10 backdrop-blur"
-        style={{ padding }}
-      >
-        {children}
-      </div>
-    </div>
-  );
-}
-
-/* =========================== Config / Assets =========================== */
+// --- Config ---
 const MODELS = {
-  plastic: { name: "Plastic", usd: 42 },
-  aluminium: { name: "Aluminium", usd: 69 },
+  plastic: { name: "Plastic", usd: 42, originalUsd: 69 },
+  aluminium: { name: "Aluminium", usd: 69, originalUsd: 99 },
 } as const;
 
+// Media assets per model
 type MediaItem =
   | { id: string; type: "image"; src: string; alt: string }
   | { id: string; type: "video"; src: string; alt: string }
@@ -121,15 +26,15 @@ const MEDIA: Record<keyof typeof MODELS, MediaItem[]> = {
     { id: "p3", type: "model", src: "/media/plastic/unit.glb",   alt: "Interactive 3D model", poster: "/media/plastic/hero-1.jpg" },
   ],
   aluminium: [
-    { id: "a1", type: "image", src: "/media/aluminium/hero-1.jpg", alt: "Aluminium – front" },
+    { id: "a1", type: "image", src: "/media/aluminium/hero-1.png", alt: "Aluminium – front" },
     { id: "a2", type: "video", src: "/media/aluminium/spin.mp4",   alt: "Aluminium 360°" },
-    { id: "a3", type: "image", src: "/media/aluminium/detail-cnc.jpg", alt: "CNC detail" },
+    { id: "a3", type: "image", src: "/media/aluminium/detail-cnc.png", alt: "CNC detail" },
   ],
 };
 
 const INVENTORY_TOTAL = 4200; // shared pool; bundle counts as 2 units
 
-/* =========================== Price mock =========================== */
+// --- Price mock ---
 function useMockSolPrice() {
   const [solPrice, setSolPrice] = useState(200);
   useEffect(() => {
@@ -141,9 +46,9 @@ function useMockSolPrice() {
   return solPrice;
 }
 
-/* =========================== UI atoms =========================== */
+// --- UI atoms ---
 const Badge = ({ children }: { children: React.ReactNode }) => (
-  <span className="inline-flex items-center rounded-full bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-300 ring-1 ring-inset ring-blue-500/30">
+  <span className="inline-flex items-center rounded-full bg-zinc-500/10 px-3 py-1 text-xs font-medium text-zinc-300 ring-1 ring-inset ring-zinc-500/30">
     {children}
   </span>
 );
@@ -151,7 +56,7 @@ const Badge = ({ children }: { children: React.ReactNode }) => (
 function Progress({ value }: { value: number }) {
   return (
     <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
-      <div className="h-full bg-blue-600 transition-[width] duration-500" style={{ width: `${Math.min(100, Math.max(0, value))}%` }} />
+      <div className="h-full bg-gradient-to-r from-zinc-400 to-zinc-500 transition-[width] duration-500" style={{ width: `${Math.min(100, Math.max(0, value))}%` }} />
     </div>
   );
 }
@@ -164,9 +69,67 @@ function Navbar() {
           <div className="h-8 w-8 rounded-xl bg-white/10 grid place-items-center"><span className="text-lg">🐸</span></div>
           <span className="font-semibold text-white">unruggable</span>
         </div>
-        <a href="#buy" className="rounded-xl bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 text-sm font-medium shadow-lg shadow-blue-600/25">Pre-Order</a>
+        <a href="#buy" className="rounded-xl bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-500 hover:to-zinc-600 text-white px-4 py-2 text-sm font-medium shadow-lg shadow-zinc-600/25">Pre-Order</a>
       </div>
     </header>
+  );
+}
+
+/* =================== Static Solana-style border card (no animation) =================== */
+function SolanaStaticRing({
+  children,
+  className = "rounded-3xl",
+  padding = 24,
+  thickness = 2,
+  halo = true,
+  variant = "solana",
+}: {
+  children: React.ReactNode;
+  className?: string;
+  padding?: number;
+  thickness?: number;
+  halo?: boolean;
+  variant?: "solana" | "aluminum";
+}) {
+  const ring = `${thickness}px`;
+  
+  const gradients = {
+    solana: {
+      ring: "conic-gradient(from 0deg,#9945FF 0%,#8752F3 12%,#5497D5 24%,#43B4CA 36%,#39D0D8 50%,#2CE3A2 64%,#94F7C5 78%,#9945FF 100%)",
+      halo: "conic-gradient(from 0deg, rgba(153,69,255,.8), rgba(135,82,243,.7), rgba(84,151,213,.6), rgba(67,180,202,.6), rgba(57,208,216,.6), rgba(44,227,162,.6), rgba(148,247,197,.6), rgba(153,69,255,.8))"
+    },
+    aluminum: {
+      ring: "conic-gradient(from 0deg, #a8a8a8 0%, #d4d4d4 12%, #e5e5e5 24%, #f5f5f5 36%, #ffffff 50%, #f5f5f5 64%, #d4d4d4 78%, #a8a8a8 100%)",
+      halo: "conic-gradient(from 0deg, rgba(168,168,168,.6), rgba(212,212,212,.5), rgba(229,229,229,.4), rgba(245,245,245,.4), rgba(255,255,255,.5), rgba(245,245,245,.4), rgba(212,212,212,.5), rgba(168,168,168,.6))"
+    }
+  };
+
+  const currentGradient = gradients[variant];
+  
+  return (
+    <div className={`relative ${className}`}>
+      <style>{`
+        .ssr-base { position:absolute; inset:0; border-radius:inherit; border:1px solid rgba(255,255,255,0.10); pointer-events:none; }
+        .ssr-ring-${variant} {
+          position:absolute; inset:0; border-radius:inherit; padding:${ring};
+          background: ${currentGradient.ring};
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none;
+        }
+        .ssr-halo-${variant} {
+          position:absolute; inset:-12px; border-radius:inherit; padding:${ring};
+          background: ${currentGradient.halo};
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor; mask-composite: exclude; filter: blur(18px); opacity:.22; pointer-events:none;
+        }
+      `}</style>
+      <div className="ssr-base" aria-hidden />
+      <div className={`ssr-ring-${variant}`} aria-hidden />
+      {halo && <div className={`ssr-halo-${variant}`} aria-hidden />}
+      <div className="relative rounded-[inherit] bg-white/5 border border-white/10 backdrop-blur" style={{ padding }}>
+        {children}
+      </div>
+    </div>
   );
 }
 
@@ -207,10 +170,7 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
     if (!isVisible || isHover || isDragging) return;
     if (active.type === "video" && userPaused) return;
 
-    const delay =
-      active.type === "video" ? 14000 :
-      active.type === "model" ? 16000 : 6000;
-
+    const delay = active.type === "video" ? 14000 : active.type === "model" ? 16000 : 6000;
     const t = setTimeout(next, delay);
     return () => clearTimeout(t);
   }, [index, items, isReducedMotion, isHover, isDragging, isVisible, userPaused, active]);
@@ -241,11 +201,11 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
   const isVideoPlaying = showPlayButton && !(userPaused || isHover || isDragging || !isVisible);
 
   return (
-    <div className="relative rounded-3xl bg-gradient-to-br from-zinc-900 to-blue-900/40 p-3 shadow-2xl">
+    <div className="relative rounded-3xl bg-gradient-to-br from-zinc-900 to-zinc-800/60 p-3 shadow-2xl">
       <div
         ref={stageRef}
         className="relative w-full overflow-hidden rounded-2xl ring-1 ring-white/10"
-        style={{ aspectRatio: "4 / 5" }}
+        style={{ aspectRatio: "3 / 4" }}
         onMouseEnter={() => setIsHover(true)}
         onMouseLeave={() => setIsHover(false)}
         onMouseDown={onMouseDown}
@@ -313,7 +273,7 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
           <button
             key={it.id}
             onClick={() => { setIndex(i); setUserPaused(false); }}
-            className={`aspect-[4/3] overflow-hidden rounded-xl ring-1 ${i === index ? "ring-blue-500" : "ring-white/10"}`}
+            className={`aspect-[4/3] overflow-hidden rounded-xl ring-1 ${i === index ? "ring-zinc-400" : "ring-white/10"}`}
             title={it.alt}
           >
             {it.type === "image" && <img loading="lazy" src={it.src} alt="" className="h-full w-full object-cover" />}
@@ -400,7 +360,7 @@ function ModelShowcase({ model, onSwitch }: { model: keyof typeof MODELS; onSwit
           <button
             key={m.id}
             onClick={() => onSwitch(m.id as keyof typeof MODELS)}
-            className={`rounded-xl px-3 py-2 text-sm border ${model === (m.id as keyof typeof MODELS) ? "border-blue-500/60 bg-blue-500/10 text-blue-200" : "border-white/10 text-zinc-300 hover:border-white/20"}`}
+            className={`rounded-xl px-3 py-2 text-sm border ${model === (m.id as keyof typeof MODELS) ? "border-zinc-400/60 bg-zinc-500/10 text-zinc-200" : "border-white/10 text-zinc-300 hover:border-white/20"}`}
           >
             {m.label}
           </button>
@@ -412,7 +372,7 @@ function ModelShowcase({ model, onSwitch }: { model: keyof typeof MODELS; onSwit
 
 /* ========================= Buy Box ========================= */
 function BuyBox({
-  model, setModel, qty, setQty, solPrice, remaining, onAddSku, onPayFromCart,
+  model, setModel, qty, setQty, solPrice, remaining, onAddSku, onOpenCart,
 }: {
   model: keyof typeof MODELS;
   setModel: (m: keyof typeof MODELS) => void;
@@ -421,26 +381,25 @@ function BuyBox({
   solPrice: number;
   remaining: number;
   onAddSku: (sku: Sku, qty: number) => void;
-  onPayFromCart: (type: "crypto" | "fiat") => void;
+  onOpenCart: () => void;
 }) {
   const usd = MODELS[model].usd;
   const sol = usd / solPrice;
-  const save = 42 + 69 - 99; // 12
 
   return (
-    <SolanaStaticRing className="rounded-3xl" thickness={2}>
+    <SolanaStaticRing className="rounded-3xl" thickness={2} variant={model === "plastic" ? "solana" : "aluminum"}>
       <div id="buy">
         <div className="mb-2"><Badge>Pre-Order</Badge></div>
-        <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-white mb-2">Unruggable Unit ONE</h1>
-        <p className="text-zinc-300 mb-6">Choose model → set quantity → add to basket.</p>
+        <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-white mb-1.5">Unruggable Unit ONE</h1>
+        <p className="text-zinc-300 mb-3">Choose model → set quantity → add to basket.</p>
 
         {/* Model selector */}
-        <div className="grid grid-cols-2 gap-2 mb-4">
+        <div className="grid grid-cols-2 gap-2 mb-3">
           {(Object.entries(MODELS) as [keyof typeof MODELS, (typeof MODELS)[keyof typeof MODELS]][]).map(([id, m]) => (
             <button
               key={id}
               onClick={() => setModel(id)}
-              className={`rounded-xl border px-3 py-2 text-sm ${model === id ? "border-blue-500/60 bg-blue-500/10 text-blue-200" : "border-white/10 text-zinc-300 hover:border-white/20"}`}
+              className={`rounded-xl border px-3 py-2 text-sm ${model === id ? "border-zinc-400/60 bg-zinc-500/10 text-zinc-200" : "border-white/10 text-zinc-300 hover:border-white/20"}`}
             >
               {m.name}
             </button>
@@ -448,7 +407,7 @@ function BuyBox({
         </div>
 
         {/* Quantity */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3 rounded-2xl border border-white/10 p-2">
             <button aria-label="Decrease quantity" onClick={() => setQty(Math.max(1, qty - 1))} className="h-9 w-9 grid place-items-center rounded-xl bg-white/5">−</button>
             <span className="w-10 text-center" aria-live="polite">{qty}</span>
@@ -458,56 +417,69 @@ function BuyBox({
         </div>
 
         {/* Pricing row */}
-        <div className="rounded-2xl border border-white/10 p-4 mb-4">
+        <div className="rounded-2xl border border-white/10 p-3 mb-3">
           <div className="flex items-baseline justify-between">
             <div className="text-zinc-300">Price (per unit)</div>
-            <div className="text-2xl font-semibold">${usd}</div>
+            <div className="flex items-center gap-3">
+              <div className="text-lg text-zinc-500 line-through">${MODELS[model].originalUsd}</div>
+              <div className="text-2xl font-semibold text-emerald-400">${usd}</div>
+            </div>
           </div>
-          <div className="mt-2 text-sm text-zinc-400">
-            ≈ {sol.toFixed(3)} SOL · {usd} USDC
-            <span className="ml-2 text-xs">(SOL updates live)</span>
+          <div className="mt-2 flex items-center justify-between">
+            <div className="text-sm text-emerald-400 font-medium">
+              Save ${MODELS[model].originalUsd - usd}
+            </div>
+            <div className="text-sm text-zinc-400">
+              ≈ {sol.toFixed(3)} SOL · {usd} USDC
+            </div>
           </div>
+          <div className="text-xs text-zinc-500 mt-1">(SOL updates live)</div>
         </div>
 
         {/* Actions */}
-        <div className="grid sm:grid-cols-3 gap-3 mb-3">
+        <div className="grid sm:grid-cols-3 gap-2 mb-3">
           <button
             onClick={() => onAddSku(model as Sku, qty)}
-            className="sm:col-span-2 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 font-medium shadow-lg shadow-blue-600/25"
+            className="sm:col-span-2 rounded-2xl bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-500 hover:to-zinc-600 text-white px-4 py-2.5 font-medium shadow-lg shadow-zinc-600/25"
           >
             Add to Basket
-            <div className="text-xs text-blue-100/90">Plastic/Aluminium supported</div>
+            <div className="text-xs text-zinc-100/90">Plastic/Aluminium supported</div>
           </button>
           <button
-            onClick={() => onPayFromCart("crypto")}
-            className="rounded-2xl bg-white/10 hover:bg-white/15 text-white px-4 py-3 font-medium border border-white/15"
+            onClick={onOpenCart}
+            className="rounded-2xl bg-white/10 hover:bg-white/15 text-white px-4 py-2.5 font-medium border border-white/15"
           >
             Go to Checkout
             <div className="text-xs text-white/70">SOL/USDC or Card</div>
           </button>
         </div>
 
-        {/* 🔥 Bundle Upsell */}
-        <div className="rounded-2xl border border-amber-400/30 bg-amber-500/10 p-4 mb-3">
+        {/* Bundle Upsell */}
+        <div className="rounded-2xl border border-amber-400/30 bg-amber-500/10 p-3 mb-3">
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="text-white font-medium">Bundle: 1× Aluminium + 1× Plastic</div>
-              <div className="text-xs text-amber-200/90 mt-1">Save ${save} vs buying separately · Only <span className="font-semibold">$99</span></div>
+            <div className="flex items-center gap-2 mt-1.5">
+                <span className="text-sm text-zinc-400 line-through">$168</span>
+                <span className="text-lg font-bold text-amber-300">$99</span>
+                <span className="rounded-full bg-amber-400/20 px-2 py-0.5 text-xs font-semibold text-amber-200">Save $69</span>
+              </div>
+              <div className="text-xs text-amber-200/70 mt-0.5">Best deal · Get both models at 41% off</div>
             </div>
             <button
               onClick={() => onAddSku("bundle", 1)}
-              className="rounded-xl bg-amber-400 hover:bg-amber-300 text-black px-3 py-2 text-sm font-semibold shadow"
+              className="rounded-xl bg-amber-400 hover:bg-amber-300 text-black px-3 py-1.5 text-sm font-semibold shadow whitespace-nowrap"
             >
-              Add Bundle — $99
+              Add Bundle
             </button>
           </div>
         </div>
 
         {/* Inventory */}
-        <div className="text-sm text-zinc-300 mb-2">{INVENTORY_TOTAL} total · {remaining} remaining</div>
+        <div className="text-sm text-zinc-300 mb-1.5">{INVENTORY_TOTAL} total · {remaining} remaining</div>
         <Progress value={((INVENTORY_TOTAL - remaining) / INVENTORY_TOTAL) * 100} />
 
-        <p className="mt-4 text-xs text-zinc-400">
+        <p className="mt-2 text-xs text-zinc-400">
           Ships in Q2 2026 · Customs & duties paid by you · Non-UK shipping paid by you.
         </p>
       </div>
@@ -578,7 +550,7 @@ function CheckoutBar({
               <p className="text-lg font-semibold text-white">${usdSubtotal}</p>
             </div>
           </div>
-          <div className="rounded-xl bg-blue-600 px-4 py-2 text-sm text-white">Review & Checkout</div>
+          <div className="rounded-xl bg-gradient-to-r from-zinc-600 to-zinc-700 px-4 py-2 text-sm text-white">Review & Checkout</div>
         </div>
       </button>
     </div>
@@ -595,7 +567,7 @@ function MiniCartSheet({
   onDec,
   onRemove,
   onClear,
-  onPay,
+  onOpenHelio,
 }: {
   open: boolean;
   onClose: () => void;
@@ -606,7 +578,7 @@ function MiniCartSheet({
   onDec: (s: Sku) => void;
   onRemove: (s: Sku) => void;
   onClear: () => void;
-  onPay: (t: "crypto" | "fiat") => void;
+  onOpenHelio: (t: HelioPayMethod) => void;
 }) {
   const solTotal = usdSubtotal / solPrice;
 
@@ -663,23 +635,23 @@ function MiniCartSheet({
               </div>
             </div>
 
-            {/* Pay actions */}
+            {/* Pay actions -> open Helio */}
             <div className="mt-4 grid sm:grid-cols-2 gap-3">
               <button
-                onClick={() => onPay("crypto")}
+                onClick={() => onOpenHelio("crypto")}
                 disabled={items.length === 0}
-                className="rounded-2xl bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-500 text-white px-4 py-3 font-medium shadow-lg shadow-blue-600/25"
+                className="rounded-2xl bg-gradient-to-r from-zinc-600 to-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed hover:from-zinc-500 hover:to-zinc-600 text-white px-4 py-3 font-medium shadow-lg shadow-zinc-600/25"
               >
                 Buy with SOL / USDC
-                <div className="text-xs text-blue-100/90">via HelioPay · token selectable</div>
+                <div className="text-xs text-zinc-100/90">via Helio</div>
               </button>
               <button
-                onClick={() => onPay("fiat")}
+                onClick={() => onOpenHelio("fiat")}
                 disabled={items.length === 0}
                 className="rounded-2xl bg-white disabled:opacity-50 disabled:cursor-not-allowed text-black px-4 py-3 font-medium"
               >
                 Card / Apple Pay
-                <div className="text-xs text-black/70">via Coinflow</div>
+                <div className="text-xs text-black/70">via Helio</div>
               </button>
             </div>
 
@@ -707,7 +679,6 @@ function InlineInfoDock({
 
   return (
     <div className="mt-6">
-      {/* Compact 3x2 grid on desktop; 2x3 on small */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
         {([
           { id: "faq", label: "FAQ" },
@@ -717,21 +688,20 @@ function InlineInfoDock({
           { id: "partners", label: "Partners" },
           { id: "support", label: "Support" },
         ] as {id: DockKey; label: string}[]).map((b) => (
-          <button
-            key={b.id}
-            onClick={() => toggle(b.id)}
-            className={`rounded-2xl border px-4 py-3 text-sm font-medium transition
+            <button
+              key={b.id}
+              onClick={() => toggle(b.id)}
+              className={`rounded-2xl border px-4 py-3 text-sm font-medium transition
                         ${openKey === b.id
-                          ? "bg-blue-600 text-white border-blue-500/60"
+                          ? "bg-gradient-to-r from-zinc-600 to-zinc-700 text-white border-zinc-500/60"
                           : "bg-zinc-950/70 text-zinc-200 border-white/10 hover:bg-zinc-900/80"}`}
-            aria-pressed={openKey === b.id}
-          >
+              aria-pressed={openKey === b.id}
+            >
             {b.label}
           </button>
         ))}
       </div>
 
-      {/* Expandable panel with static Solana border */}
       <div
         className={`overflow-hidden transition-all duration-300 ${openKey ? "mt-4 max-h-[32rem]" : "max-h-0"}`}
         aria-live="polite"
@@ -798,7 +768,9 @@ function DockSpecs() {
     <div className="space-y-2">
       <div className="text-sm font-medium text-white">Specs (snapshot)</div>
       <ul className="text-xs text-zinc-300 space-y-1 list-disc pl-5">
-        <li>Models: Plastic ($42), Aluminium ($69)</li>
+        <li>Models: Plastic ($69 → $42), Aluminium ($99 → $69)</li>
+        <li>Connection: USB-C for universal compatibility</li>
+        <li>Compatible with iOS, macOS, Windows, Linux, Android</li>
         <li>Open-source hardware & firmware</li>
         <li>Tamper-evident enclosure, audit-ready</li>
         <li>Solana-first; companion app open-source</li>
@@ -867,8 +839,13 @@ export default function PreorderPage() {
   const [cartOpen, setCartOpen] = useState(false);
   const [dockOpen, setDockOpen] = useState<null | DockKey>(null);
 
+  // Helio modal state
+  const [helioOpen, setHelioOpen] = useState(false);
+  const [helioMethod, setHelioMethod] = useState<HelioPayMethod>("crypto");
+
   const handleAddSku = (sku: Sku, q: number) => add(sku, q);
 
+  // Advance flow when Helio reports success (optimistic; rely on webhooks for truth)
   const simulatePayment = (_type: "crypto" | "fiat") => {
     const totalUnits = items.reduce((n, it) => n + it.qty * (it.sku === "bundle" ? 2 : 1), 0);
     if (totalUnits === 0) return;
@@ -881,13 +858,22 @@ export default function PreorderPage() {
 
   const shippingSubmit = () => setStage("summary");
 
+  const openHelio = (method: HelioPayMethod) => {
+    setHelioMethod(method);
+    setHelioOpen(true);
+  };
+
+  const handleHelioSuccess = (_payment: unknown) => {
+    simulatePayment(helioMethod);
+  };
+
   return (
     <div className="min-h-screen bg-black text-white">
       <Navbar />
 
       {/* 1) Above-the-fold */}
       {stage === "buy" && (
-        <section className="relative overflow-hidden bg-gradient-to-b from-blue-950/20 via-black to-black">
+        <section className="relative overflow-hidden bg-gradient-to-b from-zinc-900/40 via-black to-black">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-12 pb-10">
             <div className="grid lg:grid-cols-12 gap-8 items-start">
               <div className="lg:col-span-6">
@@ -903,7 +889,7 @@ export default function PreorderPage() {
                   solPrice={solPrice}
                   remaining={remaining}
                   onAddSku={handleAddSku}
-                  onPayFromCart={() => setCartOpen(true)}
+                  onOpenCart={() => setCartOpen(true)}
                 />
                 <InlineInfoDock openKey={dockOpen} setOpenKey={setDockOpen} />
               </div>
@@ -917,7 +903,7 @@ export default function PreorderPage() {
         <CheckoutBar count={count} usdSubtotal={usdSubtotal} onOpen={() => setCartOpen(true)} />
       )}
 
-      {/* MiniCart sheet */}
+      {/* MiniCart sheet (opens Helio) */}
       <MiniCartSheet
         open={cartOpen}
         onClose={() => setCartOpen(false)}
@@ -928,7 +914,18 @@ export default function PreorderPage() {
         onDec={(s) => setCartQty(s, (items.find(i => i.sku === s)?.qty ?? 0) - 1)}
         onRemove={(s) => remove(s)}
         onClear={() => clear()}
-        onPay={(t) => { setCartOpen(false); simulatePayment(t); }}
+        onOpenHelio={(t) => { setCartOpen(false); openHelio(t); }}
+      />
+
+      {/* Helio modal (Dynamic Pricing) */}
+      <HelioPayModal
+        open={helioOpen}
+        onClose={() => setHelioOpen(false)}
+        method={helioMethod}
+        amountUsd={usdSubtotal} // 🔥 dynamic
+        lines={items.map(i => ({ sku: i.sku, name: i.name, qty: i.qty, unitUsd: i.unitUsd }))}
+        onSuccess={handleHelioSuccess}
+        paylinkId="6913f286a438059a7e340339" // 🔒 ensure Dynamic Pricing is enabled on this link
       />
 
       {/* 2) After payment */}
@@ -939,7 +936,7 @@ export default function PreorderPage() {
               Success! Add your address details (placeholder).
             </div>
             <div className="mt-4">
-              <button onClick={shippingSubmit} className="rounded-xl bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5">
+              <button onClick={shippingSubmit} className="rounded-xl bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-500 hover:to-zinc-600 text-white px-5 py-2.5">
                 Continue
               </button>
             </div>
