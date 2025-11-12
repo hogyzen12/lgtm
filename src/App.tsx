@@ -66,8 +66,7 @@ function Navbar() {
     <header className="sticky top-0 z-40 w-full backdrop-blur border-b border-white/10 bg-black/50">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-xl bg-white/10 grid place-items-center"><span className="text-lg">🐸</span></div>
-          <span className="font-semibold text-white">unruggable</span>
+          <img src="/logo.svg" alt="Unruggable" className="h-32" />
         </div>
         <a href="#buy" className="rounded-xl bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-500 hover:to-zinc-600 text-white px-4 py-2 text-sm font-medium shadow-lg shadow-zinc-600/25">Pre-Order</a>
       </div>
@@ -826,7 +825,7 @@ function Section({ id, eyebrow, title, children }: { id: string; eyebrow: string
 
 /* ================================== Page ================================== */
 export default function PreorderPage() {
-  const [model, setModel] = useState<keyof typeof MODELS>("plastic");
+  const [model, setModel] = useState<keyof typeof MODELS>("aluminium");
   const [qty, setQty] = useState(1);
   const [remaining, setRemaining] = useState(INVENTORY_TOTAL);
   const [stage, setStage] = useState<"buy" | "ship" | "summary">("buy");
@@ -970,7 +969,10 @@ export default function PreorderPage() {
       {/* Footer */}
       <footer className="mt-10 border-t border-white/10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 items-center justify-between gap-4">
-          <div className="flex items-center gap-3 text-zinc-400"><span className="text-xl">🐸</span><span>© {new Date().getFullYear()} Unruggable</span></div>
+          <div className="flex items-center gap-3 text-zinc-400">
+            <img src="/logo.svg" alt="Unruggable" className="h-20" />
+            <span>© {new Date().getFullYear()} Unruggable Engineering LTD</span>
+          </div>
           <div className="flex items-center gap-6 text-sm text-zinc-400 justify-start md:justify-end">
             <a href="#">Terms</a>
             <a href="#">Privacy</a>
