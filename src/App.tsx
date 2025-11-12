@@ -595,7 +595,7 @@ function MiniCartSheet({
       />
       {/* sheet with static Solana ring */}
       <div className="relative mx-auto max-w-2xl px-3 pb-3">
-        <SolanaStaticRing className="rounded-t-3xl rounded-b-3xl md:rounded-3xl" padding={16} thickness={2}>
+        <SolanaStaticRing className="rounded-t-3xl rounded-b-3xl md:rounded-3xl" padding={16} thickness={2} variant="aluminum">
           <div className="p-2 md:p-2">
             <div className="mx-auto h-1.5 w-10 rounded-full bg-white/15 mb-3" />
             <div className="flex items-center justify-between">
