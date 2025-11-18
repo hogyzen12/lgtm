@@ -19,16 +19,26 @@ type MediaItem =
   | { id: string; type: "video"; src: string; alt: string }
   | { id: string; type: "model"; src: string; alt: string; poster?: string };
 
-const MEDIA: Record<keyof typeof MODELS, MediaItem[]> = {
+const MEDIA: Record<keyof typeof MODELS | "bundle", MediaItem[]> = {
   plastic: [
-    { id: "p1", type: "video", src: "/media/plastic/reveal.mp4", alt: "Plastic – front" },
-    { id: "p2", type: "video", src: "/media/plastic/spin.mp4",   alt: "Plastic 360°" },
-    { id: "p3", type: "model", src: "/media/plastic/unit.glb",   alt: "Interactive 3D model", poster: "/media/plastic/hero-1.jpg" },
+    { id: "p1", type: "video", src: "/media/plastic/reveal.mp4", alt: "Plastic reveal" },
+    { id: "p2", type: "video", src: "/media/plastic/spin.mp4", alt: "Plastic 360° spin" },
+    { id: "p3", type: "model", src: "/media/plastic/unit.glb", alt: "Interactive 3D model", poster: "/media/plastic/frontplastic.webp" },
+    { id: "p4", type: "image", src: "/media/plastic/frontplastic.webp", alt: "Plastic front view" },
+    { id: "p5", type: "image", src: "/media/plastic/backplastic.webp", alt: "Plastic back view" },
+    { id: "p6", type: "image", src: "/media/plastic/rightplastic.webp", alt: "Plastic side view" },
+    { id: "p7", type: "image", src: "/media/plastic/usbplastic.webp", alt: "Plastic USB-C port" },
   ],
   aluminium: [
-    { id: "a1", type: "image", src: "/media/aluminium/hero-1.png", alt: "Aluminium – front" },
-    { id: "a2", type: "video", src: "/media/aluminium/spin.mp4",   alt: "Aluminium 360°" },
-    { id: "a3", type: "image", src: "/media/aluminium/detail-cnc.png", alt: "CNC detail" },
+    { id: "a1", type: "video", src: "/media/aluminium/reveal.mp4", alt: "Aluminium reveal" },
+    { id: "a2", type: "image", src: "/media/aluminium/frontalu.webp", alt: "Aluminium front view" },
+    { id: "a3", type: "image", src: "/media/aluminium/backalu.webp", alt: "Aluminium back view" },
+    { id: "a4", type: "image", src: "/media/aluminium/rightalu.webp", alt: "Aluminium side view" },
+    { id: "a5", type: "image", src: "/media/aluminium/usbalu.webp", alt: "Aluminium USB-C port" },
+  ],
+  bundle: [
+    { id: "b1", type: "image", src: "/media/bundle/bundle_1.webp", alt: "Bundle - both models" },
+    { id: "b2", type: "image", src: "/media/bundle/bundle_2.webp", alt: "Bundle - side by side" },
   ],
 };
 
@@ -339,53 +349,55 @@ function useLocalStorageCart(key = "unruggable:cart") {
 }
 
 /* =================== Showcase / Selectors =================== */
-function ModelShowcase({ model, onSwitch }: { model: keyof typeof MODELS; onSwitch: (m: keyof typeof MODELS) => void }) {
+function ModelShowcase({ model }: { model: keyof typeof MODELS | "bundle" }) {
   const items = MEDIA[model] ?? [];
   return (
     <div className="relative">
       <MediaCarousel items={items} />
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        {[{ id: "plastic", label: "Plastic" }, { id: "aluminium", label: "Aluminium" }].map((m) => (
-          <button
-            key={m.id}
-            onClick={() => onSwitch(m.id as keyof typeof MODELS)}
-            className={`rounded-xl px-3 py-2 text-sm border ${model === (m.id as keyof typeof MODELS) ? "border-zinc-400/60 bg-zinc-500/10 text-zinc-200" : "border-white/10 text-zinc-300 hover:border-white/20"}`}
-          >
-            {m.label}
-          </button>
-        ))}
-      </div>
     </div>
   );
 }
 
 /* ========================= Buy Box ========================= */
 function BuyBox({
-  solPrice, onAddSku, onOpenCart,
+  model,
+  setModel,
+  solPrice,
+  onAddSku,
+  onOpenCart,
 }: {
+  model: keyof typeof MODELS | "bundle";
+  setModel: (m: keyof typeof MODELS | "bundle") => void;
   solPrice: number;
   onAddSku: (sku: Sku, qty: number) => void;
   onOpenCart: () => void;
 }) {
   const [plasticQty, setPlasticQty] = useState(1);
   const [aluminiumQty, setAluminiumQty] = useState(1);
+  const [bundleQty, setBundleQty] = useState(1);
 
   return (
     <div id="buy">
       <div className="mb-4">
         <Badge>Pre-Order</Badge>
       </div>
-      <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-white mb-1.5">Unruggable Unit ONE</h1>
+      <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-white mb-1.5">
+        Unruggable {model === "aluminium" ? "A1" : model === "plastic" ? "P0" : "Bundle"}
+      </h1>
       <p className="text-zinc-300 mb-6">Select your model and add to basket</p>
 
       {/* Model Cards */}
       <div className="grid gap-4 mb-6">
         {/* Plastic Model Card */}
-        <SolanaStaticRing className="rounded-3xl" thickness={2} variant="solana">
-          <div className="grid sm:grid-cols-2 gap-4">
+        <button
+          onClick={() => setModel("plastic")}
+          className={`text-left transition-all ${model === "plastic" ? "ring-2 ring-zinc-400" : ""}`}
+        >
+          <SolanaStaticRing className="rounded-3xl" thickness={2} variant="solana">
+            <div className="grid sm:grid-cols-2 gap-4">
             {/* Image */}
             <div className="aspect-[4/3] rounded-2xl overflow-hidden ring-1 ring-white/10">
-              <img src="/media/plastic/hero-1.jpg" alt="Plastic Model" className="w-full h-full object-cover" />
+              <img src="/media/plastic/frontplastic.webp" alt="Plastic Model" className="w-full h-full object-cover" />
             </div>
 
             {/* Info and Controls */}
@@ -419,13 +431,18 @@ function BuyBox({
             </div>
           </div>
         </SolanaStaticRing>
+        </button>
 
         {/* Aluminium Model Card */}
-        <SolanaStaticRing className="rounded-3xl" thickness={2} variant="aluminum">
-          <div className="grid sm:grid-cols-2 gap-4">
+        <button
+          onClick={() => setModel("aluminium")}
+          className={`text-left transition-all ${model === "aluminium" ? "ring-2 ring-zinc-400" : ""}`}
+        >
+          <SolanaStaticRing className="rounded-3xl" thickness={2} variant="aluminum">
+            <div className="grid sm:grid-cols-2 gap-4">
             {/* Image */}
             <div className="aspect-[4/3] rounded-2xl overflow-hidden ring-1 ring-white/10">
-              <img src="/media/aluminium/hero-1.png" alt="Aluminium Model" className="w-full h-full object-cover" />
+              <img src="/media/aluminium/frontalu.webp" alt="Aluminium Model" className="w-full h-full object-cover" />
             </div>
 
             {/* Info and Controls */}
@@ -459,27 +476,52 @@ function BuyBox({
             </div>
           </div>
         </SolanaStaticRing>
-      </div>
+        </button>
 
-      {/* Bundle Upsell */}
-      <div className="rounded-2xl border border-amber-400/30 bg-amber-500/10 p-4 mb-4">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="text-white font-medium mb-1">Bundle: 1× Aluminium + 1× Plastic</div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm text-zinc-400 line-through">$168</span>
-              <span className="text-xl font-bold text-amber-300">$99</span>
-              <span className="rounded-full bg-amber-400/20 px-2 py-0.5 text-xs font-semibold text-amber-200">Save $69</span>
+        {/* Bundle Model Card */}
+        <button
+          onClick={() => setModel("bundle")}
+          className={`text-left transition-all ${model === "bundle" ? "ring-2 ring-amber-400" : ""}`}
+        >
+          <div className="rounded-3xl border border-amber-400/30 bg-amber-500/10 p-4">
+            <div className="grid sm:grid-cols-2 gap-4">
+              {/* Image */}
+              <div className="aspect-[4/3] rounded-2xl overflow-hidden ring-1 ring-amber-400/30">
+                <img src="/media/bundle/bundle_1.webp" alt="Bundle" className="w-full h-full object-cover" />
+              </div>
+
+              {/* Info and Controls */}
+              <div className="flex flex-col justify-between">
+                <div>
+                  <h3 className="text-xl font-semibold text-white mb-2">Bundle</h3>
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-2xl font-bold text-amber-300">$99</span>
+                    <span className="text-lg text-zinc-500 line-through">$168</span>
+                    <span className="rounded-full bg-amber-400/20 px-2 py-0.5 text-xs font-semibold text-amber-200">Save $69</span>
+                  </div>
+                  <p className="text-sm text-amber-200/70 mb-3">1× Aluminium A1 + 1× Plastic P0</p>
+                </div>
+
+                {/* Quantity and Add */}
+                <div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="flex items-center gap-2 rounded-xl border border-amber-400/30 p-2">
+                      <button aria-label="Decrease" onClick={(e) => { e.stopPropagation(); setBundleQty(Math.max(1, bundleQty - 1)); }} className="h-8 w-8 grid place-items-center rounded-lg bg-amber-400/10">−</button>
+                      <span className="w-8 text-center">{bundleQty}</span>
+                      <button aria-label="Increase" onClick={(e) => { e.stopPropagation(); setBundleQty(bundleQty + 1); }} className="h-8 w-8 grid place-items-center rounded-lg bg-amber-400/10">+</button>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onAddSku("bundle", bundleQty); }}
+                      className="flex-1 rounded-xl bg-amber-400 hover:bg-amber-300 text-black px-4 py-2.5 font-semibold shadow"
+                    >
+                      Add to Basket
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="text-xs text-amber-200/70">Best deal · Get both models at 41% off</div>
           </div>
-          <button
-            onClick={() => onAddSku("bundle", 1)}
-            className="rounded-xl bg-amber-400 hover:bg-amber-300 text-black px-4 py-2 text-sm font-semibold shadow whitespace-nowrap"
-          >
-            Add Bundle
-          </button>
-        </div>
+        </button>
       </div>
 
       {/* Checkout Button */}
@@ -510,12 +552,17 @@ function MiniCartRow({
   onDec: () => void;
   onRemove: () => void;
 }) {
-  const icon = item.sku === "plastic" ? "🧵" : item.sku === "aluminium" ? "🛠️" : "🎁";
+  const imageSrc = item.sku === "plastic" 
+    ? "/media/plastic/frontplastic.webp" 
+    : item.sku === "aluminium" 
+    ? "/media/aluminium/frontalu.webp" 
+    : "/media/bundle/bundle_1.webp";
+  
   return (
     <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 p-3">
       <div className="flex items-center gap-3">
-        <div className="h-12 w-12 rounded-xl bg-white/5 grid place-items-center ring-1 ring-white/10">
-          <span className="text-sm">{icon}</span>
+        <div className="h-12 w-12 rounded-xl overflow-hidden ring-1 ring-white/10 flex-shrink-0">
+          <img src={imageSrc} alt={item.name} className="w-full h-full object-cover" />
         </div>
         <div>
           <div className="text-sm text-white">{item.name}</div>
@@ -555,7 +602,9 @@ function CheckoutBar({
       >
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-white/10 grid place-items-center"><span>🧺</span></div>
+            <div className="h-9 w-9 rounded-xl bg-white/10 p-2">
+              <img src="/cart.svg" alt="Cart" className="w-full h-full brightness-0 invert" />
+            </div>
             <div className="text-left">
               <p className="text-sm text-zinc-400">Basket • {count} item{count !== 1 ? "s" : ""}</p>
               <p className="text-lg font-semibold text-white">${usdSubtotal}</p>
@@ -837,7 +886,7 @@ function Section({ id, eyebrow, title, children }: { id: string; eyebrow: string
 
 /* ================================== Page ================================== */
 export default function PreorderPage() {
-  const [model, setModel] = useState<keyof typeof MODELS>("aluminium");
+  const [model, setModel] = useState<keyof typeof MODELS | "bundle">("aluminium");
   const [stage, setStage] = useState<"buy" | "ship" | "summary">("buy");
   const solPrice = useMockSolPrice();
 
@@ -885,11 +934,13 @@ export default function PreorderPage() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-12 pb-10">
             <div className="grid lg:grid-cols-12 gap-8 items-start">
               <div className="lg:col-span-6">
-                <ModelShowcase model={model} onSwitch={setModel} />
+                <ModelShowcase model={model} />
               </div>
 
               <div className="lg:col-span-6">
                 <BuyBox
+                  model={model}
+                  setModel={setModel}
                   solPrice={solPrice}
                   onAddSku={handleAddSku}
                   onOpenCart={() => setCartOpen(true)}
