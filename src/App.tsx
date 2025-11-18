@@ -32,8 +32,6 @@ const MEDIA: Record<keyof typeof MODELS, MediaItem[]> = {
   ],
 };
 
-const INVENTORY_TOTAL = 4200; // shared pool; bundle counts as 2 units
-
 // --- Price mock ---
 function useMockSolPrice() {
   const [solPrice, setSolPrice] = useState(200);
@@ -52,14 +50,6 @@ const Badge = ({ children }: { children: React.ReactNode }) => (
     {children}
   </span>
 );
-
-function Progress({ value }: { value: number }) {
-  return (
-    <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
-      <div className="h-full bg-gradient-to-r from-zinc-400 to-zinc-500 transition-[width] duration-500" style={{ width: `${Math.min(100, Math.max(0, value))}%` }} />
-    </div>
-  );
-}
 
 function Navbar() {
   return (
@@ -371,118 +361,140 @@ function ModelShowcase({ model, onSwitch }: { model: keyof typeof MODELS; onSwit
 
 /* ========================= Buy Box ========================= */
 function BuyBox({
-  model, setModel, qty, setQty, solPrice, remaining, onAddSku, onOpenCart,
+  solPrice, onAddSku, onOpenCart,
 }: {
-  model: keyof typeof MODELS;
-  setModel: (m: keyof typeof MODELS) => void;
-  qty: number;
-  setQty: (n: number) => void;
   solPrice: number;
-  remaining: number;
   onAddSku: (sku: Sku, qty: number) => void;
   onOpenCart: () => void;
 }) {
-  const usd = MODELS[model].usd;
-  const sol = usd / solPrice;
+  const [plasticQty, setPlasticQty] = useState(1);
+  const [aluminiumQty, setAluminiumQty] = useState(1);
 
   return (
-    <SolanaStaticRing className="rounded-3xl" thickness={2} variant={model === "plastic" ? "solana" : "aluminum"}>
-      <div id="buy">
-        <div className="mb-2"><Badge>Pre-Order</Badge></div>
-        <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-white mb-1.5">Unruggable Unit ONE</h1>
-        <p className="text-zinc-300 mb-3">Choose model → set quantity → add to basket.</p>
-
-        {/* Model selector */}
-        <div className="grid grid-cols-2 gap-2 mb-3">
-          {(Object.entries(MODELS) as [keyof typeof MODELS, (typeof MODELS)[keyof typeof MODELS]][]).map(([id, m]) => (
-            <button
-              key={id}
-              onClick={() => setModel(id)}
-              className={`rounded-xl border px-3 py-2 text-sm ${model === id ? "border-zinc-400/60 bg-zinc-500/10 text-zinc-200" : "border-white/10 text-zinc-300 hover:border-white/20"}`}
-            >
-              {m.name}
-            </button>
-          ))}
-        </div>
-
-        {/* Quantity */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3 rounded-2xl border border-white/10 p-2">
-            <button aria-label="Decrease quantity" onClick={() => setQty(Math.max(1, qty - 1))} className="h-9 w-9 grid place-items-center rounded-xl bg-white/5">−</button>
-            <span className="w-10 text-center" aria-live="polite">{qty}</span>
-            <button aria-label="Increase quantity" onClick={() => setQty(qty + 1)} className="h-9 w-9 grid place-items-center rounded-xl bg-white/5">+</button>
-          </div>
-          <p className="text-xs text-zinc-400">Buy multiples in one go.</p>
-        </div>
-
-        {/* Pricing row */}
-        <div className="rounded-2xl border border-white/10 p-3 mb-3">
-          <div className="flex items-baseline justify-between">
-            <div className="text-zinc-300">Price (per unit)</div>
-            <div className="flex items-center gap-3">
-              <div className="text-lg text-zinc-500 line-through">${MODELS[model].originalUsd}</div>
-              <div className="text-2xl font-semibold text-emerald-400">${usd}</div>
-            </div>
-          </div>
-          <div className="mt-2 flex items-center justify-between">
-            <div className="text-sm text-emerald-400 font-medium">
-              Save ${MODELS[model].originalUsd - usd}
-            </div>
-            <div className="text-sm text-zinc-400">
-              ≈ {sol.toFixed(3)} SOL · {usd} USDC
-            </div>
-          </div>
-          <div className="text-xs text-zinc-500 mt-1">(SOL updates live)</div>
-        </div>
-
-        {/* Actions */}
-        <div className="grid sm:grid-cols-3 gap-2 mb-3">
-          <button
-            onClick={() => onAddSku(model as Sku, qty)}
-            className="sm:col-span-2 rounded-2xl bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-500 hover:to-zinc-600 text-white px-4 py-2.5 font-medium shadow-lg shadow-zinc-600/25"
-          >
-            Add to Basket
-            <div className="text-xs text-zinc-100/90">Plastic/Aluminium supported</div>
-          </button>
-          <button
-            onClick={onOpenCart}
-            className="rounded-2xl bg-white/10 hover:bg-white/15 text-white px-4 py-2.5 font-medium border border-white/15"
-          >
-            Go to Checkout
-            <div className="text-xs text-white/70">SOL/USDC or Card</div>
-          </button>
-        </div>
-
-        {/* Bundle Upsell */}
-        <div className="rounded-2xl border border-amber-400/30 bg-amber-500/10 p-3 mb-3">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <div className="text-white font-medium">Bundle: 1× Aluminium + 1× Plastic</div>
-            <div className="flex items-center gap-2 mt-1.5">
-                <span className="text-sm text-zinc-400 line-through">$168</span>
-                <span className="text-lg font-bold text-amber-300">$99</span>
-                <span className="rounded-full bg-amber-400/20 px-2 py-0.5 text-xs font-semibold text-amber-200">Save $69</span>
-              </div>
-              <div className="text-xs text-amber-200/70 mt-0.5">Best deal · Get both models at 41% off</div>
-            </div>
-            <button
-              onClick={() => onAddSku("bundle", 1)}
-              className="rounded-xl bg-amber-400 hover:bg-amber-300 text-black px-3 py-1.5 text-sm font-semibold shadow whitespace-nowrap"
-            >
-              Add Bundle
-            </button>
-          </div>
-        </div>
-
-        {/* Inventory */}
-        <div className="text-sm text-zinc-300 mb-1.5">{INVENTORY_TOTAL} total · {remaining} remaining</div>
-        <Progress value={((INVENTORY_TOTAL - remaining) / INVENTORY_TOTAL) * 100} />
-
-        <p className="mt-2 text-xs text-zinc-400">
-          Ships in Q2 2026 · Customs & duties paid by you · Non-UK shipping paid by you.
-        </p>
+    <div id="buy">
+      <div className="mb-4">
+        <Badge>Pre-Order</Badge>
       </div>
-    </SolanaStaticRing>
+      <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-white mb-1.5">Unruggable Unit ONE</h1>
+      <p className="text-zinc-300 mb-6">Select your model and add to basket</p>
+
+      {/* Model Cards */}
+      <div className="grid gap-4 mb-6">
+        {/* Plastic Model Card */}
+        <SolanaStaticRing className="rounded-3xl" thickness={2} variant="solana">
+          <div className="grid sm:grid-cols-2 gap-4">
+            {/* Image */}
+            <div className="aspect-[4/3] rounded-2xl overflow-hidden ring-1 ring-white/10">
+              <img src="/media/plastic/hero-1.jpg" alt="Plastic Model" className="w-full h-full object-cover" />
+            </div>
+
+            {/* Info and Controls */}
+            <div className="flex flex-col justify-between">
+              <div>
+                <h3 className="text-xl font-semibold text-white mb-2">Plastic</h3>
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-2xl font-bold text-emerald-400">${MODELS.plastic.usd}</span>
+                  <span className="text-lg text-zinc-500 line-through">${MODELS.plastic.originalUsd}</span>
+                  <span className="rounded-full bg-emerald-400/20 px-2 py-0.5 text-xs font-semibold text-emerald-300">Save ${MODELS.plastic.originalUsd - MODELS.plastic.usd}</span>
+                </div>
+                <p className="text-sm text-zinc-400 mb-3">≈ {(MODELS.plastic.usd / solPrice).toFixed(3)} SOL · {MODELS.plastic.usd} USDC</p>
+              </div>
+
+              {/* Quantity and Add */}
+              <div>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex items-center gap-2 rounded-xl border border-white/10 p-2">
+                    <button aria-label="Decrease" onClick={() => setPlasticQty(Math.max(1, plasticQty - 1))} className="h-8 w-8 grid place-items-center rounded-lg bg-white/5">−</button>
+                    <span className="w-8 text-center">{plasticQty}</span>
+                    <button aria-label="Increase" onClick={() => setPlasticQty(plasticQty + 1)} className="h-8 w-8 grid place-items-center rounded-lg bg-white/5">+</button>
+                  </div>
+                  <button
+                    onClick={() => onAddSku("plastic", plasticQty)}
+                    className="flex-1 rounded-xl bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-500 hover:to-zinc-600 text-white px-4 py-2.5 font-medium shadow-lg shadow-zinc-600/25"
+                  >
+                    Add to Basket
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </SolanaStaticRing>
+
+        {/* Aluminium Model Card */}
+        <SolanaStaticRing className="rounded-3xl" thickness={2} variant="aluminum">
+          <div className="grid sm:grid-cols-2 gap-4">
+            {/* Image */}
+            <div className="aspect-[4/3] rounded-2xl overflow-hidden ring-1 ring-white/10">
+              <img src="/media/aluminium/hero-1.png" alt="Aluminium Model" className="w-full h-full object-cover" />
+            </div>
+
+            {/* Info and Controls */}
+            <div className="flex flex-col justify-between">
+              <div>
+                <h3 className="text-xl font-semibold text-white mb-2">Aluminium</h3>
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-2xl font-bold text-emerald-400">${MODELS.aluminium.usd}</span>
+                  <span className="text-lg text-zinc-500 line-through">${MODELS.aluminium.originalUsd}</span>
+                  <span className="rounded-full bg-emerald-400/20 px-2 py-0.5 text-xs font-semibold text-emerald-300">Save ${MODELS.aluminium.originalUsd - MODELS.aluminium.usd}</span>
+                </div>
+                <p className="text-sm text-zinc-400 mb-3">≈ {(MODELS.aluminium.usd / solPrice).toFixed(3)} SOL · {MODELS.aluminium.usd} USDC</p>
+              </div>
+
+              {/* Quantity and Add */}
+              <div>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex items-center gap-2 rounded-xl border border-white/10 p-2">
+                    <button aria-label="Decrease" onClick={() => setAluminiumQty(Math.max(1, aluminiumQty - 1))} className="h-8 w-8 grid place-items-center rounded-lg bg-white/5">−</button>
+                    <span className="w-8 text-center">{aluminiumQty}</span>
+                    <button aria-label="Increase" onClick={() => setAluminiumQty(aluminiumQty + 1)} className="h-8 w-8 grid place-items-center rounded-lg bg-white/5">+</button>
+                  </div>
+                  <button
+                    onClick={() => onAddSku("aluminium", aluminiumQty)}
+                    className="flex-1 rounded-xl bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-500 hover:to-zinc-600 text-white px-4 py-2.5 font-medium shadow-lg shadow-zinc-600/25"
+                  >
+                    Add to Basket
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </SolanaStaticRing>
+      </div>
+
+      {/* Bundle Upsell */}
+      <div className="rounded-2xl border border-amber-400/30 bg-amber-500/10 p-4 mb-4">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="text-white font-medium mb-1">Bundle: 1× Aluminium + 1× Plastic</div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-sm text-zinc-400 line-through">$168</span>
+              <span className="text-xl font-bold text-amber-300">$99</span>
+              <span className="rounded-full bg-amber-400/20 px-2 py-0.5 text-xs font-semibold text-amber-200">Save $69</span>
+            </div>
+            <div className="text-xs text-amber-200/70">Best deal · Get both models at 41% off</div>
+          </div>
+          <button
+            onClick={() => onAddSku("bundle", 1)}
+            className="rounded-xl bg-amber-400 hover:bg-amber-300 text-black px-4 py-2 text-sm font-semibold shadow whitespace-nowrap"
+          >
+            Add Bundle
+          </button>
+        </div>
+      </div>
+
+      {/* Checkout Button */}
+      <button
+        onClick={onOpenCart}
+        className="w-full rounded-2xl bg-white/10 hover:bg-white/15 text-white px-4 py-3 font-medium border border-white/15 mb-4"
+      >
+        Go to Checkout
+        <div className="text-xs text-white/70">SOL/USDC or Card</div>
+      </button>
+
+      <p className="text-xs text-zinc-400 text-center">
+        Ships in Q2 2026 · Customs & duties paid by you · Non-UK shipping paid by you.
+      </p>
+    </div>
   );
 }
 
@@ -826,8 +838,6 @@ function Section({ id, eyebrow, title, children }: { id: string; eyebrow: string
 /* ================================== Page ================================== */
 export default function PreorderPage() {
   const [model, setModel] = useState<keyof typeof MODELS>("aluminium");
-  const [qty, setQty] = useState(1);
-  const [remaining, setRemaining] = useState(INVENTORY_TOTAL);
   const [stage, setStage] = useState<"buy" | "ship" | "summary">("buy");
   const solPrice = useMockSolPrice();
 
@@ -848,7 +858,6 @@ export default function PreorderPage() {
   const simulatePayment = (_type: "crypto" | "fiat") => {
     const totalUnits = items.reduce((n, it) => n + it.qty * (it.sku === "bundle" ? 2 : 1), 0);
     if (totalUnits === 0) return;
-    setRemaining((r) => Math.max(0, r - totalUnits));
     setPurchasedItems(items);
     setPurchasedTotal(usdSubtotal);
     clear();
@@ -881,12 +890,7 @@ export default function PreorderPage() {
 
               <div className="lg:col-span-6">
                 <BuyBox
-                  model={model}
-                  setModel={setModel}
-                  qty={qty}
-                  setQty={setQty}
                   solPrice={solPrice}
-                  remaining={remaining}
                   onAddSku={handleAddSku}
                   onOpenCart={() => setCartOpen(true)}
                 />
