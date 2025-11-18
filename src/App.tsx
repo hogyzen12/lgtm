@@ -53,14 +53,6 @@ const Badge = ({ children }: { children: React.ReactNode }) => (
   </span>
 );
 
-function Progress({ value }: { value: number }) {
-  return (
-    <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
-      <div className="h-full bg-gradient-to-r from-zinc-400 to-zinc-500 transition-[width] duration-500" style={{ width: `${Math.min(100, Math.max(0, value))}%` }} />
-    </div>
-  );
-}
-
 function Navbar() {
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur border-b border-white/10 bg-black/50">
@@ -473,10 +465,6 @@ function BuyBox({
             </button>
           </div>
         </div>
-
-        {/* Inventory */}
-        <div className="text-sm text-zinc-300 mb-1.5">{INVENTORY_TOTAL} total · {remaining} remaining</div>
-        <Progress value={((INVENTORY_TOTAL - remaining) / INVENTORY_TOTAL) * 100} />
 
         <p className="mt-2 text-xs text-zinc-400">
           Ships in Q2 2026 · Customs & duties paid by you · Non-UK shipping paid by you.
