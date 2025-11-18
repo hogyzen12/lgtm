@@ -31,10 +31,7 @@ const MEDIA: Record<keyof typeof MODELS | "bundle", MediaItem[]> = {
   ],
   aluminium: [
     { id: "a1", type: "video", src: "/media/aluminium/reveal.mp4", alt: "Aluminium reveal" },
-    { id: "a2", type: "image", src: "/media/aluminium/frontalu.webp", alt: "Aluminium front view" },
-    { id: "a3", type: "image", src: "/media/aluminium/backalu.webp", alt: "Aluminium back view" },
-    { id: "a4", type: "image", src: "/media/aluminium/rightalu.webp", alt: "Aluminium side view" },
-    { id: "a5", type: "image", src: "/media/aluminium/usbalu.webp", alt: "Aluminium USB-C port" },
+    { id: "a2", type: "model", src: "/media/aluminium/unit.glb", alt: "Interactive 3D model", poster: "/media/plastic/frontplastic.webp" },
   ],
   bundle: [
     { id: "b1", type: "image", src: "/media/bundle/bundle_1.webp", alt: "Bundle - both models" },
@@ -42,15 +39,35 @@ const MEDIA: Record<keyof typeof MODELS | "bundle", MediaItem[]> = {
   ],
 };
 
-// --- Price mock ---
-function useMockSolPrice() {
-  const [solPrice, setSolPrice] = useState(200);
+// --- Real SOL Price from Jupiter ---
+function useSolPrice() {
+  const [solPrice, setSolPrice] = useState(147); // Default fallback price
+  
   useEffect(() => {
-    const id = setInterval(() => {
-      setSolPrice((p) => Math.max(5, +(p + (Math.random() - 0.5) * 0.6).toFixed(2)));
-    }, 4000);
-    return () => clearInterval(id);
+    const fetchPrice = async () => {
+      try {
+        const response = await fetch(
+          'https://lite-api.jup.ag/price/v3?ids=So11111111111111111111111111111111111111112'
+        );
+        const data = await response.json();
+        const solData = data['So11111111111111111111111111111111111111112'];
+        if (solData && solData.usdPrice) {
+          setSolPrice(Number(solData.usdPrice.toFixed(2)));
+        }
+      } catch (error) {
+        console.error('Failed to fetch SOL price:', error);
+        // Keep using the current price on error
+      }
+    };
+
+    // Fetch immediately
+    fetchPrice();
+
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchPrice, 30000);
+    return () => clearInterval(interval);
   }, []);
+
   return solPrice;
 }
 
@@ -62,13 +79,42 @@ const Badge = ({ children }: { children: React.ReactNode }) => (
 );
 
 function Navbar() {
+  const tickerText = "UNRUGGABLE - THE FIRST HARDWARE WALLET ENGINEERED FOR SOLANA - LIMITED EDITION INITIAL RUN - POWERED BY SOLANA - SHIPPING Q2 2026 - PRE ORDER NOW";
+  
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur border-b border-white/10 bg-black/50">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <img src="/logo.svg" alt="Unruggable" className="h-32" />
+      <style>{`
+        @keyframes ticker-scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .ticker-animate {
+          animation: ticker-scroll 30s linear infinite;
+        }
+        .ticker-animate:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
+        {/* Logo Left - Responsive */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <img src="/unruggable_mobile.svg" alt="Unruggable" className="h-5 sm:hidden" />
+          <img src="/logo.svg" alt="Unruggable" className="hidden sm:block h-6" />
         </div>
-        <a href="#buy" className="rounded-xl bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-500 hover:to-zinc-600 text-white px-4 py-2 text-sm font-medium shadow-lg shadow-zinc-600/25">Pre-Order</a>
+        
+        {/* Scrolling Ticker Center */}
+        <div className="flex-1 overflow-hidden relative min-w-0">
+          <div className="flex ticker-animate whitespace-nowrap">
+            <span className="text-xs font-medium text-zinc-300 px-4 sm:px-8">{tickerText}</span>
+            <span className="text-xs font-medium text-zinc-300 px-4 sm:px-8">{tickerText}</span>
+          </div>
+        </div>
+        
+        {/* Solana Logo Right - Responsive */}
+        <div className="flex items-center flex-shrink-0">
+          <img src="/solana_mobile.svg" alt="Powered by Solana" className="h-5 sm:hidden" />
+          <img src="/solanaLogo.svg" alt="Powered by Solana" className="hidden sm:block h-6" />
+        </div>
       </div>
     </header>
   );
@@ -268,18 +314,47 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
       </div>
 
       <div className="mt-3 grid grid-cols-3 gap-2">
-        {items.map((it, i) => (
-          <button
-            key={it.id}
-            onClick={() => { setIndex(i); setUserPaused(false); }}
-            className={`aspect-[4/3] overflow-hidden rounded-xl ring-1 ${i === index ? "ring-zinc-400" : "ring-white/10"}`}
-            title={it.alt}
-          >
-            {it.type === "image" && <img loading="lazy" src={it.src} alt="" className="h-full w-full object-cover" />}
-            {it.type === "video" && <div className="h-full w-full grid place-items-center bg-black/60"><span className="text-xs text-white/80">360°</span></div>}
-            {it.type === "model" && <div className="h-full w-full grid place-items-center bg-black/60"><span className="text-xs text-white/90">3D</span></div>}
-          </button>
-        ))}
+        {items.map((it, i) => {
+          // Get thumbnail for each media type
+          const getThumbnail = () => {
+            if (it.type === "image") {
+              return <img loading="lazy" src={it.src} alt="" className="h-full w-full object-cover" />;
+            }
+            if (it.type === "video") {
+              // Use first frame or a representative image
+              return (
+                <div className="relative h-full w-full">
+                  <video src={it.src} className="h-full w-full object-cover" muted />
+                  <div className="absolute inset-0 bg-black/40 grid place-items-center">
+                    <span className="text-xs text-white/90 font-medium">▶ Video</span>
+                  </div>
+                </div>
+              );
+            }
+            if (it.type === "model" && (it as any).poster) {
+              return (
+                <div className="relative h-full w-full">
+                  <img loading="lazy" src={(it as any).poster} alt="" className="h-full w-full object-cover" />
+                  <div className="absolute inset-0 bg-black/40 grid place-items-center">
+                    <span className="text-xs text-white/90 font-medium">3D Model</span>
+                  </div>
+                </div>
+              );
+            }
+            return <div className="h-full w-full grid place-items-center bg-black/60"><span className="text-xs text-white/90">3D</span></div>;
+          };
+
+          return (
+            <button
+              key={it.id}
+              onClick={() => { setIndex(i); setUserPaused(false); }}
+              className={`aspect-[4/3] overflow-hidden rounded-xl ring-1 ${i === index ? "ring-zinc-400" : "ring-white/10"}`}
+              title={it.alt}
+            >
+              {getThumbnail()}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -363,12 +438,14 @@ function BuyBox({
   model,
   setModel,
   solPrice,
+  cartTotal,
   onAddSku,
   onOpenCart,
 }: {
   model: keyof typeof MODELS | "bundle";
   setModel: (m: keyof typeof MODELS | "bundle") => void;
   solPrice: number;
+  cartTotal: number;
   onAddSku: (sku: Sku, qty: number) => void;
   onOpenCart: () => void;
 }) {
@@ -384,7 +461,7 @@ function BuyBox({
       <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-white mb-1.5">
         Unruggable {model === "aluminium" ? "A1" : model === "plastic" ? "P0" : "Bundle"}
       </h1>
-      <p className="text-zinc-300 mb-6">Select your model and add to basket</p>
+      <p className="text-zinc-300 mb-6">Choose model → set quantity → add to basket.</p>
 
       {/* Model Cards */}
       <div className="grid gap-4 mb-6">
@@ -440,9 +517,14 @@ function BuyBox({
         >
           <SolanaStaticRing className="rounded-3xl" thickness={2} variant="aluminum">
             <div className="grid sm:grid-cols-2 gap-4">
-            {/* Image */}
-            <div className="aspect-[4/3] rounded-2xl overflow-hidden ring-1 ring-white/10">
-              <img src="/media/aluminium/frontalu.webp" alt="Aluminium Model" className="w-full h-full object-cover" />
+            {/* Image - using placeholder until aluminium images arrive */}
+            <div className="aspect-[4/3] rounded-2xl overflow-hidden ring-1 ring-white/10 bg-zinc-800/50">
+              <div className="h-full w-full grid place-items-center text-zinc-400">
+                <div className="text-center">
+                  <div className="text-sm font-medium mb-1">Aluminium A1</div>
+                  <div className="text-xs text-zinc-500">Product photos coming soon</div>
+                </div>
+              </div>
             </div>
 
             {/* Info and Controls */}
@@ -525,12 +607,63 @@ function BuyBox({
       </div>
 
       {/* Checkout Button */}
+      <style>{`
+        @keyframes gradient-wave {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .checkout-button {
+          background: rgba(255,255,255,0.1);
+          position: relative;
+          overflow: hidden;
+        }
+        .checkout-button::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(153,69,255,0.8),
+            rgba(84,151,213,0.8),
+            rgba(67,180,202,0.8),
+            rgba(57,208,216,0.8),
+            rgba(44,227,162,0.8),
+            transparent
+          );
+          transition: left 0.6s ease-out;
+        }
+        .checkout-button:hover::before {
+          left: 100%;
+        }
+        .checkout-button:hover {
+          background: linear-gradient(
+            270deg,
+            #9945FF,
+            #8752F3,
+            #5497D5,
+            #43B4CA,
+            #39D0D8,
+            #2CE3A2,
+            #94F7C5
+          );
+          background-size: 400% 400%;
+          animation: gradient-wave 2s ease infinite;
+          border-color: rgba(153,69,255,0.5);
+        }
+      `}</style>
       <button
         onClick={onOpenCart}
-        className="w-full rounded-2xl bg-white/10 hover:bg-white/15 text-white px-4 py-3 font-medium border border-white/15 mb-4"
+        className="checkout-button w-full rounded-2xl text-white px-4 py-3 font-medium border border-white/15 mb-4 transition-all duration-300"
       >
-        Go to Checkout
-        <div className="text-xs text-white/70">SOL/USDC or Card</div>
+        <div className="relative z-10">
+          <div className="font-semibold">Go to Checkout{cartTotal > 0 ? ` • $${cartTotal}` : ''}</div>
+          <div className="text-xs text-white/90">Powered by Solana</div>
+        </div>
       </button>
 
       <p className="text-xs text-zinc-400 text-center">
@@ -888,7 +1021,7 @@ function Section({ id, eyebrow, title, children }: { id: string; eyebrow: string
 export default function PreorderPage() {
   const [model, setModel] = useState<keyof typeof MODELS | "bundle">("aluminium");
   const [stage, setStage] = useState<"buy" | "ship" | "summary">("buy");
-  const solPrice = useMockSolPrice();
+  const solPrice = useSolPrice();
 
   const { items, count, usdSubtotal, add, setQty: setCartQty, remove, clear } = useLocalStorageCart();
 
@@ -942,6 +1075,7 @@ export default function PreorderPage() {
                   model={model}
                   setModel={setModel}
                   solPrice={solPrice}
+                  cartTotal={usdSubtotal}
                   onAddSku={handleAddSku}
                   onOpenCart={() => setCartOpen(true)}
                 />
@@ -1025,8 +1159,9 @@ export default function PreorderPage() {
       <footer className="mt-10 border-t border-white/10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 items-center justify-between gap-4">
           <div className="flex items-center gap-3 text-zinc-400">
-            <img src="/logo.svg" alt="Unruggable" className="h-20" />
-            <span>© {new Date().getFullYear()} Unruggable Engineering LTD</span>
+            <img src="/unruggable_mobile.svg" alt="Unruggable" className="h-5 sm:hidden" />
+            <img src="/logo.svg" alt="Unruggable" className="hidden sm:block h-6" />
+            <span className="text-sm">© {new Date().getFullYear()} Unruggable Engineering LTD</span>
           </div>
           <div className="flex items-center gap-6 text-sm text-zinc-400 justify-start md:justify-end">
             <a href="#">Terms</a>
