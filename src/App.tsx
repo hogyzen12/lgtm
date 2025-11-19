@@ -31,7 +31,8 @@ const MEDIA: Record<keyof typeof MODELS | "bundle", MediaItem[]> = {
   ],
   aluminium: [
     { id: "a1", type: "video", src: "/media/aluminium/reveal.mp4", alt: "Aluminium reveal" },
-    { id: "a2", type: "model", src: "/media/aluminium/unit.glb", alt: "Interactive 3D model", poster: "/media/plastic/frontplastic.webp" },
+    { id: "a2", type: "model", src: "/media/aluminium/unit.glb", alt: "Interactive 3D model", poster: "/media/aluminium/usbalu.webp" },
+    { id: "a3", type: "image", src: "/media/aluminium/usbalu.webp", alt: "Aluminium USB-C port" },
   ],
   bundle: [
     { id: "b1", type: "image", src: "/media/bundle/bundle_1.webp", alt: "Bundle - both models" },
@@ -182,7 +183,6 @@ function SolanaStaticRing({
 function MediaCarousel({ items }: { items: MediaItem[] }) {
   const [index, setIndex] = useState(0);
   const [isReducedMotion, setIsReducedMotion] = useState(false);
-  const [isHover, setIsHover] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [userPaused, setUserPaused] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
@@ -210,23 +210,38 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
     return () => io.disconnect();
   }, []);
 
+  // Video ended handler - transition to next when video completes
+  useEffect(() => {
+    const vid = videoRef.current;
+    if (!vid || active.type !== "video") return;
+    
+    const handleEnded = () => {
+      if (!userPaused) next();
+    };
+    
+    vid.addEventListener('ended', handleEnded);
+    return () => vid.removeEventListener('ended', handleEnded);
+  }, [active, userPaused, index]);
+
+  // Auto-advance for non-video items
   useEffect(() => {
     if (isReducedMotion || items.length <= 1) return;
-    if (!isVisible || isHover || isDragging) return;
-    if (active.type === "video" && userPaused) return;
+    if (!isVisible || isDragging) return;
+    if (active.type === "video") return; // Videos handle their own transition via 'ended' event
 
-    const delay = active.type === "video" ? 14000 : active.type === "model" ? 16000 : 6000;
+    const delay = active.type === "model" ? 16000 : 6000;
     const t = setTimeout(next, delay);
     return () => clearTimeout(t);
-  }, [index, items, isReducedMotion, isHover, isDragging, isVisible, userPaused, active]);
+  }, [index, items, isReducedMotion, isDragging, isVisible, active]);
 
+  // Video playback control - autoplay unless user paused
   useEffect(() => {
     const vid = videoRef.current;
     if (!vid) return;
-    const shouldPlay = isVisible && !isHover && !isDragging && !userPaused;
+    const shouldPlay = isVisible && !isDragging && !userPaused;
     if (shouldPlay) void vid.play().catch(() => {});
     else vid.pause();
-  }, [active, isVisible, isHover, isDragging, userPaused]);
+  }, [active, isVisible, isDragging, userPaused]);
 
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const onTouchStart = (e: React.TouchEvent) => { setTouchStartX(e.touches[0].clientX); setIsDragging(true); };
@@ -243,7 +258,7 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
   const onMouseUp = () => setIsDragging(false);
 
   const showPlayButton = active.type === "video";
-  const isVideoPlaying = showPlayButton && !(userPaused || isHover || isDragging || !isVisible);
+  const isVideoPlaying = showPlayButton && !(userPaused || isDragging || !isVisible);
 
   return (
     <div className="relative rounded-3xl bg-gradient-to-br from-zinc-900 to-zinc-800/60 p-3 shadow-2xl">
@@ -251,8 +266,6 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
         ref={stageRef}
         className="relative w-full overflow-hidden rounded-2xl ring-1 ring-white/10"
         style={{ aspectRatio: "3 / 4" }}
-        onMouseEnter={() => setIsHover(true)}
-        onMouseLeave={() => setIsHover(false)}
         onMouseDown={onMouseDown}
         onMouseUp={onMouseUp}
         onTouchStart={onTouchStart}
@@ -269,8 +282,8 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
             className="h-full w-full object-cover"
             autoPlay
             muted
-            loop
             playsInline
+            onClick={() => setUserPaused((p) => !p)}
           />
         )}
         {active.type === "model" && (
@@ -278,7 +291,7 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
             src={active.src}
             poster={(active as any).poster}
             camera-controls
-            {...(isVisible && !isHover && !isDragging ? { "auto-rotate": "" } : {})}
+            {...(isVisible && !isDragging ? { "auto-rotate": "" } : {})}
             shadow-intensity={0.8}
             exposure={0.9}
             ar
@@ -289,7 +302,7 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
         {showPlayButton && (
           <button
             onClick={() => setUserPaused((p) => !p)}
-            className="absolute left-4 bottom-4 rounded-full bg-black/60 px-3 py-2 text-white text-sm backdrop-blur border border-white/10"
+            className="absolute left-4 bottom-4 rounded-full bg-black/60 px-3 py-2 text-white text-sm backdrop-blur border border-white/10 pointer-events-auto"
           >
             {isVideoPlaying ? "❚❚ Pause" : "▶ Play"}
           </button>
@@ -363,6 +376,9 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
 /* ======================= Cart system (with bundle SKU) ======================= */
 type Sku = "plastic" | "aluminium" | "bundle";
 
+const SHIPPING_FEE = 10;
+const FREE_SHIPPING_DEVICE_COUNT = 3;
+
 const SKU_NAMES: Record<Sku, string> = {
   plastic: "Plastic",
   aluminium: "Aluminium",
@@ -373,6 +389,26 @@ const SKU_PRICES: Record<Sku, number> = {
   aluminium: 69,
   bundle: 99,
 };
+
+// Calculate total device count (bundles count as 2 devices)
+function getTotalDeviceCount(items: CartItem[]): number {
+  return items.reduce((total, item) => {
+    if (item.sku === "bundle") {
+      return total + (item.qty * 2); // Bundle = 2 devices
+    }
+    return total + item.qty; // Individual device = 1 device
+  }, 0);
+}
+
+// Calculate shipping fee based on cart contents
+function calculateShipping(items: CartItem[]): number {
+  const deviceCount = getTotalDeviceCount(items);
+  
+  // Free shipping for 3+ devices
+  if (deviceCount >= FREE_SHIPPING_DEVICE_COUNT) return 0;
+  
+  return SHIPPING_FEE;
+}
 
 type CartItem = { sku: Sku; name: string; unitUsd: number; qty: number };
 type Cart = { [k in Sku]?: CartItem };
@@ -419,8 +455,11 @@ function useLocalStorageCart(key = "unruggable:cart") {
   const items = Object.values(cart).filter(Boolean) as CartItem[];
   const count = items.reduce((n, it) => n + it.qty, 0);
   const usdSubtotal = items.reduce((n, it) => n + it.qty * it.unitUsd, 0);
+  const shipping = calculateShipping(items);
+  const total = usdSubtotal + shipping;
+  const deviceCount = getTotalDeviceCount(items);
 
-  return { cart, setCart, add, setQty, remove, clear, items, count, usdSubtotal };
+  return { cart, setCart, add, setQty, remove, clear, items, count, usdSubtotal, shipping, total, deviceCount };
 }
 
 /* =================== Showcase / Selectors =================== */
@@ -517,14 +556,9 @@ function BuyBox({
         >
           <SolanaStaticRing className="rounded-3xl" thickness={2} variant="aluminum">
             <div className="grid sm:grid-cols-2 gap-4">
-            {/* Image - using placeholder until aluminium images arrive */}
-            <div className="aspect-[4/3] rounded-2xl overflow-hidden ring-1 ring-white/10 bg-zinc-800/50">
-              <div className="h-full w-full grid place-items-center text-zinc-400">
-                <div className="text-center">
-                  <div className="text-sm font-medium mb-1">Aluminium A1</div>
-                  <div className="text-xs text-zinc-500">Product photos coming soon</div>
-                </div>
-              </div>
+            {/* Image */}
+            <div className="aspect-[4/3] rounded-2xl overflow-hidden ring-1 ring-white/10">
+              <img src="/media/aluminium/usbalu.webp" alt="Aluminium Model" className="w-full h-full object-cover" />
             </div>
 
             {/* Info and Controls */}
@@ -667,7 +701,7 @@ function BuyBox({
       </button>
 
       <p className="text-xs text-zinc-400 text-center">
-        Ships in Q2 2026 · Customs & duties paid by you · Non-UK shipping paid by you.
+        Expected to ship by Q2 2026 · Customs & duties paid by you.
       </p>
     </div>
   );
@@ -688,7 +722,7 @@ function MiniCartRow({
   const imageSrc = item.sku === "plastic" 
     ? "/media/plastic/frontplastic.webp" 
     : item.sku === "aluminium" 
-    ? "/media/aluminium/frontalu.webp" 
+    ? "/media/aluminium/usbalu.webp" 
     : "/media/bundle/bundle_1.webp";
   
   return (
@@ -716,11 +750,11 @@ function MiniCartRow({
 
 function CheckoutBar({
   count,
-  usdSubtotal,
+  total,
   onOpen,
 }: {
   count: number;
-  usdSubtotal: number;
+  total: number;
   onOpen: () => void;
 }) {
   return (
@@ -740,7 +774,7 @@ function CheckoutBar({
             </div>
             <div className="text-left">
               <p className="text-sm text-zinc-400">Basket • {count} item{count !== 1 ? "s" : ""}</p>
-              <p className="text-lg font-semibold text-white">${usdSubtotal}</p>
+              <p className="text-lg font-semibold text-white">${total}</p>
             </div>
           </div>
           <div className="rounded-xl bg-gradient-to-r from-zinc-600 to-zinc-700 px-4 py-2 text-sm text-white">Review & Checkout</div>
@@ -755,6 +789,8 @@ function MiniCartSheet({
   onClose,
   items,
   usdSubtotal,
+  shipping,
+  deviceCount,
   solPrice,
   onInc,
   onDec,
@@ -766,6 +802,8 @@ function MiniCartSheet({
   onClose: () => void;
   items: CartItem[];
   usdSubtotal: number;
+  shipping: number;
+  deviceCount: number;
   solPrice: number;
   onInc: (s: Sku) => void;
   onDec: (s: Sku) => void;
@@ -773,7 +811,9 @@ function MiniCartSheet({
   onClear: () => void;
   onOpenHelio: (t: HelioPayMethod) => void;
 }) {
-  const solTotal = usdSubtotal / solPrice;
+  const total = usdSubtotal + shipping;
+  const devicesNeeded = FREE_SHIPPING_DEVICE_COUNT - deviceCount;
+  const showFreeShippingMessage = shipping > 0 && devicesNeeded > 0;
 
   return (
     <div
@@ -816,15 +856,43 @@ function MiniCartSheet({
               )}
             </div>
 
+            {/* Free Shipping Incentive */}
+            {showFreeShippingMessage && (
+              <div className="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-3">
+                <div className="text-sm text-emerald-300 font-medium">
+                  Add {devicesNeeded} more device{devicesNeeded !== 1 ? 's' : ''} for free shipping!
+                </div>
+                <div className="text-xs text-emerald-200/70 mt-1">
+                  Free shipping on 3+ devices (bundles count as 2)
+                </div>
+              </div>
+            )}
+
             {/* Totals */}
             <div className="mt-4 rounded-2xl border border-white/10 p-4">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-zinc-300">Subtotal</span>
                 <span className="text-white font-medium">${usdSubtotal}</span>
               </div>
+              <div className="flex items-center justify-between text-sm mt-2">
+                <span className="text-zinc-300">Shipping</span>
+                {shipping === 0 ? (
+                  <span className="text-emerald-400 font-medium">FREE</span>
+                ) : (
+                  <span className="text-white font-medium">${shipping}</span>
+                )}
+              </div>
+              {shipping === 0 && (
+                <div className="text-xs text-emerald-300 mt-1">Free shipping on {deviceCount} devices!</div>
+              )}
+              <div className="h-px bg-white/10 my-2" />
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-white font-semibold">Total</span>
+                <span className="text-white font-semibold">${total}</span>
+              </div>
               <div className="flex items-center justify-between text-xs mt-1 text-zinc-400">
                 <span>≈</span>
-                <span>{solTotal.toFixed(3)} SOL · pays in USDC or SOL</span>
+                <span>{(total / solPrice).toFixed(3)} SOL · pays in USDC or SOL</span>
               </div>
             </div>
 
@@ -849,7 +917,7 @@ function MiniCartSheet({
             </div>
 
             <p className="mt-3 text-xs text-zinc-500">
-              Ships in Q2 2026 · Customs & duties paid by you · Non-UK shipping paid by you.
+              Expected to ship by Q2 2026 · Customs & duties paid by you.
             </p>
           </div>
         </SolanaStaticRing>
@@ -925,7 +993,7 @@ function DockFAQ() {
   return (
     <div className="space-y-2">
       <div className="text-sm font-medium text-white">Common questions</div>
-      <Row q="When does shipping start?" a="Targeting Q2 2026. Small bootstrapped team; assembled in the UK."/>
+      <Row q="When does shipping start?" a="Expected to ship by Q2 2026. Small bootstrapped team; assembled in the UK."/>
       <Row q="Do I have to pay customs?" a="Yes—customer pays customs/import duties. Instructions arrive by email."/>
       <Row q="How many units are available?" a="4,200 total across both models; no fixed cap per model."/>
       <Row q="Is Unruggable open-source?" a="Yes—hardware, firmware, and app are fully open-source."/>
@@ -948,9 +1016,8 @@ function DockShipping() {
     <div className="space-y-2">
       <div className="text-sm font-medium text-white">Shipping & duties</div>
       <ul className="text-xs text-zinc-300 space-y-1 list-disc pl-5">
-        <li>Ships in 2026 (target Q2).</li>
+        <li>Expected to ship by Q2 2026.</li>
         <li>Customs & import duties paid by you.</li>
-        <li>Non-UK shipping paid by you.</li>
         <li>Address editable until production begins.</li>
       </ul>
     </div>
@@ -1023,7 +1090,7 @@ export default function PreorderPage() {
   const [stage, setStage] = useState<"buy" | "ship" | "summary">("buy");
   const solPrice = useSolPrice();
 
-  const { items, count, usdSubtotal, add, setQty: setCartQty, remove, clear } = useLocalStorageCart();
+  const { items, count, usdSubtotal, shipping, total, deviceCount, add, setQty: setCartQty, remove, clear } = useLocalStorageCart();
 
   const [purchasedItems, setPurchasedItems] = useState<CartItem[]>([]);
   const [purchasedTotal, setPurchasedTotal] = useState(0);
@@ -1047,11 +1114,6 @@ export default function PreorderPage() {
   };
 
   const shippingSubmit = () => setStage("summary");
-
-  const openHelio = (method: HelioPayMethod) => {
-    setHelioMethod(method);
-    setHelioOpen(true);
-  };
 
   const handleHelioSuccess = (_payment: unknown) => {
     simulatePayment(helioMethod);
@@ -1088,7 +1150,7 @@ export default function PreorderPage() {
 
       {/* Floating checkout bar */}
       {stage === "buy" && count > 0 && (
-        <CheckoutBar count={count} usdSubtotal={usdSubtotal} onOpen={() => setCartOpen(true)} />
+        <CheckoutBar count={count} total={total} onOpen={() => setCartOpen(true)} />
       )}
 
       {/* MiniCart sheet (opens Helio) */}
@@ -1097,21 +1159,32 @@ export default function PreorderPage() {
         onClose={() => setCartOpen(false)}
         items={items}
         usdSubtotal={usdSubtotal}
+        shipping={shipping}
+        deviceCount={deviceCount}
         solPrice={solPrice}
-        onInc={(s) => setCartQty(s, (items.find(i => i.sku === s)?.qty ?? 0) + 1)}
-        onDec={(s) => setCartQty(s, (items.find(i => i.sku === s)?.qty ?? 0) - 1)}
-        onRemove={(s) => remove(s)}
-        onClear={() => clear()}
-        onOpenHelio={(t) => { setCartOpen(false); openHelio(t); }}
+        onInc={(s) => setCartQty(s, (items.find((i) => i.sku === s)?.qty ?? 0) + 1)}
+        onDec={(s) => setCartQty(s, Math.max(0, (items.find((i) => i.sku === s)?.qty ?? 0) - 1))}
+        onRemove={remove}
+        onClear={clear}
+        onOpenHelio={(m) => {
+          setHelioMethod(m);
+          setHelioOpen(true);
+          setCartOpen(false);
+        }}
       />
-
-      {/* Helio modal (Dynamic Pricing) */}
       <HelioPayModal
         open={helioOpen}
         onClose={() => setHelioOpen(false)}
         method={helioMethod}
-        amountUsd={usdSubtotal} // 🔥 dynamic
-        lines={items.map(i => ({ sku: i.sku, name: i.name, qty: i.qty, unitUsd: i.unitUsd }))}
+        amountUsd={total} // 🔥 dynamic - includes shipping (free for bundles/$100+)
+        lines={
+          shipping > 0
+            ? [
+                ...items.map(i => ({ sku: i.sku, name: i.name, qty: i.qty, unitUsd: i.unitUsd })),
+                { sku: 'shipping' as Sku, name: 'Shipping', qty: 1, unitUsd: shipping }
+              ]
+            : items.map(i => ({ sku: i.sku, name: i.name, qty: i.qty, unitUsd: i.unitUsd }))
+        }
         onSuccess={handleHelioSuccess}
         paylinkId="6913f286a438059a7e340339" // 🔒 ensure Dynamic Pricing is enabled on this link
       />
