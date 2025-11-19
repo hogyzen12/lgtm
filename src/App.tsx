@@ -524,10 +524,12 @@ function CompactMediaCarousel({ modelKey }: { modelKey: keyof typeof MODELS | "b
         <ModelViewer
           src={current.src}
           alt={current.alt}
-          auto-rotate
-          camera-controls
-          poster={current.poster}
-          style={{ width: "100%", height: "100%" }}
+          auto-rotate=""
+          camera-controls=""
+          poster={(current as any).poster}
+          shadow-intensity="0.8"
+          exposure="0.9"
+          style={{ width: "100%", height: "100%", background: "transparent", display: "block" }}
         />
       )}
 
