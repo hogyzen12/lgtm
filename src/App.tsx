@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import HelioPayModal, { type HelioPayMethod } from "./HelioPayModal";
 
 /** ------------------------------------------------------------------
@@ -80,7 +80,7 @@ const Badge = ({ children }: { children: React.ReactNode }) => (
 );
 
 function Navbar() {
-  const tickerText = "UNRUGGABLE - THE FIRST HARDWARE WALLET ENGINEERED FOR SOLANA - LIMITED EDITION INITIAL RUN - POWERED BY SOLANA - SHIPPING Q2 2026 - PRE ORDER NOW";
+  const tickerText = "UNRUGGABLE - THE HARDWARE WALLET ENGINEERED FOR SOLANA - LIMITED EDITION INITIAL RUN - POWERED BY SOLANA - SHIPPING Q2 2026 - PRE ORDER NOW";
   
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur border-b border-white/10 bg-black/50">
@@ -472,6 +472,99 @@ function ModelShowcase({ model }: { model: keyof typeof MODELS | "bundle" }) {
   );
 }
 
+/* ===================== Compact Media Carousel for Cards ===================== */
+function CompactMediaCarousel({ modelKey }: { modelKey: keyof typeof MODELS | "bundle" }) {
+  const media = MEDIA[modelKey];
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const current = media[currentIndex];
+  const hasMultiple = media.length > 1;
+
+  const goNext = () => setCurrentIndex((currentIndex + 1) % media.length);
+  const goPrev = () => setCurrentIndex((currentIndex - 1 + media.length) % media.length);
+
+  useEffect(() => {
+    if (current.type === "video" && videoRef.current) {
+      videoRef.current.play();
+    }
+  }, [currentIndex, current.type]);
+
+  const handleVideoEnd = () => {
+    if (hasMultiple) goNext();
+  };
+
+  const handleVideoClick = () => {
+    if (videoRef.current) {
+      if (videoRef.current.paused) {
+        videoRef.current.play();
+      } else {
+        videoRef.current.pause();
+      }
+    }
+  };
+
+  return (
+    <div className="relative aspect-[4/3] rounded-2xl overflow-hidden ring-1 ring-white/10 bg-zinc-900">
+      {current.type === "image" && (
+        <img src={current.src} alt={current.alt} className="w-full h-full object-cover" />
+      )}
+      {current.type === "video" && (
+        <video
+          ref={videoRef}
+          src={current.src}
+          className="w-full h-full object-cover cursor-pointer"
+          playsInline
+          muted
+          onEnded={handleVideoEnd}
+          onClick={handleVideoClick}
+        />
+      )}
+      {current.type === "model" && (
+        <ModelViewer
+          src={current.src}
+          alt={current.alt}
+          auto-rotate
+          camera-controls
+          poster={current.poster}
+          style={{ width: "100%", height: "100%" }}
+        />
+      )}
+
+      {hasMultiple && (
+        <>
+          <button
+            onClick={goPrev}
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition z-10"
+            aria-label="Previous"
+          >
+            ‹
+          </button>
+          <button
+            onClick={goNext}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition z-10"
+            aria-label="Next"
+          >
+            ›
+          </button>
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+            {media.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentIndex(i)}
+                className={`w-1.5 h-1.5 rounded-full transition ${
+                  i === currentIndex ? "bg-white" : "bg-white/40"
+                }`}
+                aria-label={`Go to slide ${i + 1}`}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 /* ========================= Buy Box ========================= */
 function BuyBox({
   model,
@@ -494,13 +587,13 @@ function BuyBox({
 
   return (
     <div id="buy">
-      <div className="mb-4">
+      <div className="mb-4 hidden sm:block">
         <Badge>Pre-Order</Badge>
       </div>
-      <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-white mb-1.5">
+      <h1 className="hidden sm:block text-3xl md:text-4xl font-semibold tracking-tight text-white mb-1.5">
         Unruggable {model === "aluminium" ? "A1" : model === "plastic" ? "P0" : "Bundle"}
       </h1>
-      <p className="text-zinc-300 mb-6">Choose model → set quantity → add to basket.</p>
+      <p className="hidden sm:block text-zinc-300 mb-6">Choose model → set quantity → add to basket.</p>
 
       {/* Model Cards */}
       <div className="grid gap-4 mb-6">
@@ -509,11 +602,14 @@ function BuyBox({
           onClick={() => setModel("plastic")}
           className={`text-left transition-all ${model === "plastic" ? "ring-2 ring-zinc-400" : ""}`}
         >
-          <SolanaStaticRing className="rounded-3xl" thickness={2} variant="solana">
+        <SolanaStaticRing className="rounded-3xl" thickness={2} variant="solana">
             <div className="grid sm:grid-cols-2 gap-4">
-            {/* Image */}
-            <div className="aspect-[4/3] rounded-2xl overflow-hidden ring-1 ring-white/10">
+            {/* Image - Desktop: static image, Mobile: carousel */}
+            <div className="hidden sm:block aspect-[4/3] rounded-2xl overflow-hidden ring-1 ring-white/10">
               <img src="/media/plastic/frontplastic.webp" alt="Plastic Model" className="w-full h-full object-cover" />
+            </div>
+            <div className="sm:hidden">
+              <CompactMediaCarousel modelKey="plastic" />
             </div>
 
             {/* Info and Controls */}
@@ -554,11 +650,14 @@ function BuyBox({
           onClick={() => setModel("aluminium")}
           className={`text-left transition-all ${model === "aluminium" ? "ring-2 ring-zinc-400" : ""}`}
         >
-          <SolanaStaticRing className="rounded-3xl" thickness={2} variant="aluminum">
+        <SolanaStaticRing className="rounded-3xl" thickness={2} variant="aluminum">
             <div className="grid sm:grid-cols-2 gap-4">
-            {/* Image */}
-            <div className="aspect-[4/3] rounded-2xl overflow-hidden ring-1 ring-white/10">
+            {/* Image - Desktop: static image, Mobile: carousel */}
+            <div className="hidden sm:block aspect-[4/3] rounded-2xl overflow-hidden ring-1 ring-white/10">
               <img src="/media/aluminium/usbalu.webp" alt="Aluminium Model" className="w-full h-full object-cover" />
+            </div>
+            <div className="sm:hidden">
+              <CompactMediaCarousel modelKey="aluminium" />
             </div>
 
             {/* Info and Controls */}
@@ -601,9 +700,12 @@ function BuyBox({
         >
           <div className="rounded-3xl border border-amber-400/30 bg-amber-500/10 p-4">
             <div className="grid sm:grid-cols-2 gap-4">
-              {/* Image */}
-              <div className="aspect-[4/3] rounded-2xl overflow-hidden ring-1 ring-amber-400/30">
+              {/* Image - Desktop: static image, Mobile: carousel */}
+              <div className="hidden sm:block aspect-[4/3] rounded-2xl overflow-hidden ring-1 ring-amber-400/30">
                 <img src="/media/bundle/bundle_1.webp" alt="Bundle" className="w-full h-full object-cover" />
+              </div>
+              <div className="sm:hidden">
+                <CompactMediaCarousel modelKey="bundle" />
               </div>
 
               {/* Info and Controls */}
@@ -1086,7 +1188,7 @@ function Section({ id, eyebrow, title, children }: { id: string; eyebrow: string
 
 /* ================================== Page ================================== */
 export default function PreorderPage() {
-  const [model, setModel] = useState<keyof typeof MODELS | "bundle">("aluminium");
+  const [model, setModel] = useState<keyof typeof MODELS | "bundle">("plastic");
   const [stage, setStage] = useState<"buy" | "ship" | "summary">("buy");
   const solPrice = useSolPrice();
 
@@ -1128,7 +1230,7 @@ export default function PreorderPage() {
         <section className="relative overflow-hidden bg-gradient-to-b from-zinc-900/40 via-black to-black">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-12 pb-10">
             <div className="grid lg:grid-cols-12 gap-8 items-start">
-              <div className="lg:col-span-6">
+              <div className="hidden lg:block lg:col-span-6">
                 <ModelShowcase model={model} />
               </div>
 
