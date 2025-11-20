@@ -855,12 +855,19 @@ function MiniCartRow({
 function CheckoutBar({
   count,
   total,
+  deviceCount,
+  shipping,
   onOpen,
 }: {
   count: number;
   total: number;
+  deviceCount: number;
+  shipping: number;
   onOpen: () => void;
 }) {
+  const devicesNeeded = FREE_SHIPPING_DEVICE_COUNT - deviceCount;
+  const hasShipping = shipping > 0;
+
   return (
     <div
       className="fixed inset-x-4 md:left-auto md:w-[32rem] bottom-4 z-50"
@@ -879,6 +886,11 @@ function CheckoutBar({
             <div className="text-left">
               <p className="text-sm text-zinc-400">Basket • {count} item{count !== 1 ? "s" : ""}</p>
               <p className="text-lg font-semibold text-white">${total}</p>
+              {hasShipping && devicesNeeded > 0 ? (
+                <p className="text-xs text-amber-400 mt-0.5">$10 shipping • Add {devicesNeeded} more device{devicesNeeded !== 1 ? 's' : ''} for free shipping</p>
+              ) : shipping === 0 && deviceCount > 0 ? (
+                <p className="text-xs text-emerald-400 mt-0.5">Free shipping included!</p>
+              ) : null}
             </div>
           </div>
           <div className="rounded-xl bg-gradient-to-r from-zinc-600 to-zinc-700 px-4 py-2 text-sm text-white">Review & Checkout</div>
@@ -1254,7 +1266,13 @@ export default function PreorderPage() {
 
       {/* Floating checkout bar */}
       {stage === "buy" && count > 0 && (
-        <CheckoutBar count={count} total={total} onOpen={() => setCartOpen(true)} />
+        <CheckoutBar 
+          count={count} 
+          total={total} 
+          deviceCount={deviceCount}
+          shipping={shipping}
+          onOpen={() => setCartOpen(true)} 
+        />
       )}
 
       {/* MiniCart sheet (opens Helio) */}

@@ -211,59 +211,113 @@ export default function HomePage() {
         </section>
 
         {/* Integrations & Partners */}
-        <section className="px-6 lg:px-12 py-16">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl lg:text-4xl font-bold mb-4 bg-gradient-to-r from-white via-zinc-100 to-zinc-200 bg-clip-text text-transparent">
+        <section className="px-6 lg:px-12 py-20">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-zinc-100 to-zinc-200 bg-clip-text text-transparent">
                 Integrations & Partners
               </h2>
-              <p className="text-lg text-zinc-400">
+              <p className="text-xl text-zinc-400">
                 Trusted by leading projects in the Solana ecosystem
               </p>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 items-center">
-              <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
-                <img src="/integrations/helius.svg" alt="Helius" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+            {/* Section 1: The Best of Solana - Integration Partners */}
+            <div className="mb-16">
+              <h3 className="text-xl lg:text-2xl font-bold mb-8 text-center text-zinc-200">
+                The Best of Solana
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-6 items-center">
+                <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
+                  <img src="/integrations/helius.svg" alt="Helius" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                </div>
+                <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
+                  <img src="/integrations/helius.svg" alt="JITO" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                </div>
+                <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
+                  <img src="/integrations/helius.svg" alt="Squads" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                </div>
+                <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
+                  <img src="/integrations/helius.svg" alt="Jupiter" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                </div>
+                <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
+                  <img src="/integrations/helius.svg" alt="Titan" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                </div>
+                <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
+                  <img src="/integrations/helius.svg" alt="Jupiter Lend" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                </div>
+                <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
+                  <img src="/integrations/helius.svg" alt="DeFiCarrot" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                </div>
+                <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
+                  <img src="/integrations/helius.svg" alt="Bonk Rewards" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                </div>
               </div>
-              <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
-                <img src="/integrations/solana foundation.svg" alt="Solana Foundation" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+            </div>
+
+            {/* Section 2: High Trust Validator Partners */}
+            <div className="mb-16">
+              <h3 className="text-xl lg:text-2xl font-bold mb-8 text-center text-zinc-200">
+                High Trust Validator Partners
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 items-center">
+                <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
+                  <img src="/integrations/Gojira stake.svg" alt="Gojira Stake" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                </div>
+                <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
+                  <img src="/integrations/saga dao.svg" alt="Saga DAO" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                </div>
+                <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
+                  <img src="/integrations/Ha1iad3.svg" alt="Haliad3" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                </div>
+                <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
+                  <img src="/integrations/adrastea.svg" alt="Adrastea" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                </div>
+                <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
+                  <img src="/integrations/sentinel.svg" alt="Sentinel" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                </div>
+                <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
+                  <img src="/integrations/solblaze.svg" alt="SolBlaze" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                </div>
+                <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
+                  <img src="/integrations/stache.svg" alt="Stache" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                </div>
+                <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
+                  <img src="/integrations/sphere.svg" alt="Sphere" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                </div>
+                <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
+                  <img src="/integrations/Meta dao.svg" alt="MetaDAO" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                </div>
+                <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
+                  <img src="/integrations/Phase labs.svg" alt="Phase Labs" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                </div>
+                <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
+                  <img src="/integrations/Raposa Coffee.svg" alt="Raposa Coffee" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                </div>
+                <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
+                  <img src="/integrations/the library.svg" alt="The Library" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                </div>
               </div>
-              <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
-                <img src="/integrations/Meta dao.svg" alt="MetaDAO" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
-              </div>
-              <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
-                <img src="/integrations/Phase labs.svg" alt="Phase Labs" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
-              </div>
-              <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
-                <img src="/integrations/solblaze.svg" alt="SolBlaze" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
-              </div>
-              <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
-                <img src="/integrations/Gojira stake.svg" alt="Gojira Stake" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
-              </div>
-              <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
-                <img src="/integrations/saga dao.svg" alt="Saga DAO" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
-              </div>
-              <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
-                <img src="/integrations/Ha1iad3.svg" alt="Haliad3" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
-              </div>
-              <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
-                <img src="/integrations/adrastea.svg" alt="Adrastea" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
-              </div>
-              <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
-                <img src="/integrations/sentinel.svg" alt="Sentinel" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
-              </div>
-              <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
-                <img src="/integrations/sphere.svg" alt="Sphere" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
-              </div>
-              <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
-                <img src="/integrations/stache.svg" alt="Stache" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
-              </div>
-              <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
-                <img src="/integrations/Raposa Coffee.svg" alt="Raposa Coffee" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
-              </div>
-              <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
-                <img src="/integrations/the library.svg" alt="The Library" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+            </div>
+
+            {/* Section 3: Open Source Enabled By */}
+            <div>
+              <h3 className="text-xl lg:text-2xl font-bold mb-8 text-center text-zinc-200">
+                Open Source Enabled By
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center max-w-3xl mx-auto">
+                <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
+                  <img src="/integrations/solana foundation.svg" alt="Solana Foundation" className="h-12 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                </div>
+                <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
+                  <img src="/integrations/solana foundation.svg" alt="JET" className="h-12 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                </div>
+                <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
+                  <img src="/integrations/solana foundation.svg" alt="BONK Advisory" className="h-12 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                </div>
+                <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
+                  <img src="/integrations/solana foundation.svg" alt="Areta" className="h-12 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                </div>
               </div>
             </div>
           </div>
