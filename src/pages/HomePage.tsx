@@ -344,7 +344,7 @@ export default function HomePage() {
                   <img src="/integrations/sphere.svg" alt="Sphere" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
                 </div>
                 <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
-                  <img src="/integrations/Meta dao.svg" alt="MetaDAO" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                  <img src="/integrations/Metadao.svg" alt="MetaDAO" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
                 </div>
                 <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
                   <img src="/integrations/Phase labs.svg" alt="Phase Labs" className="h-10 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
@@ -365,16 +365,16 @@ export default function HomePage() {
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center max-w-3xl mx-auto">
                 <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
-                  <img src="/integrations/solana foundation.svg" alt="Solana Foundation" className="h-12 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                  <img src="/integrations/solanafoundation.svg" alt="Solana Foundation" className="h-12 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
                 </div>
                 <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
-                  <img src="/integrations/solana foundation.svg" alt="JET" className="h-12 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                  <img src="/integrations/solanafoundation.svg" alt="JET" className="h-12 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
                 </div>
                 <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
-                  <img src="/integrations/solana foundation.svg" alt="BONK Advisory" className="h-12 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                  <img src="/integrations/solanafoundation.svg" alt="BONK Advisory" className="h-12 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
                 </div>
                 <div className="flex items-center justify-center p-6 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all hover:scale-105">
-                  <img src="/integrations/solana foundation.svg" alt="Areta" className="h-12 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
+                  <img src="/integrations/solanafoundation.svg" alt="Areta" className="h-12 w-auto max-w-full object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ filter: 'invert(1) brightness(0.9)' }} />
                 </div>
               </div>
             </div>
