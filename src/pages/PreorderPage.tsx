@@ -25,9 +25,8 @@ const MEDIA: Record<keyof typeof MODELS | "bundle", MediaItem[]> = {
     { id: "p2", type: "video", src: "/media/plastic/spin.mp4", alt: "Plastic 360° spin" },
     { id: "p3", type: "model", src: "/media/plastic/unit.glb", alt: "Interactive 3D model", poster: "/media/plastic/frontplastic.webp" },
     { id: "p4", type: "image", src: "/media/plastic/frontplastic.webp", alt: "Plastic front view" },
-    { id: "p5", type: "image", src: "/media/plastic/backplastic.webp", alt: "Plastic back view" },
-    { id: "p6", type: "image", src: "/media/plastic/rightplastic.webp", alt: "Plastic side view" },
-    { id: "p7", type: "image", src: "/media/plastic/usbplastic.webp", alt: "Plastic USB-C port" },
+    { id: "p5", type: "image", src: "/media/plastic/rightplastic.webp", alt: "Plastic side view" },
+    { id: "p6", type: "image", src: "/media/plastic/usbplastic.webp", alt: "Plastic USB-C port" },
   ],
   aluminium: [
     { id: "a1", type: "video", src: "/media/aluminium/reveal.mp4", alt: "Aluminium reveal" },
@@ -265,7 +264,7 @@ function MediaCarousel({ items }: { items: MediaItem[] }) {
       <div
         ref={stageRef}
         className="relative w-full overflow-hidden rounded-2xl ring-1 ring-white/10"
-        style={{ aspectRatio: "3 / 4" }}
+        style={{ aspectRatio: "4 / 5" }}
         onMouseDown={onMouseDown}
         onMouseUp={onMouseUp}
         onTouchStart={onTouchStart}
@@ -593,64 +592,16 @@ function BuyBox({
         <Badge>Pre-Order</Badge>
       </div>
       <h1 className="hidden sm:block text-3xl md:text-4xl font-semibold tracking-tight text-white mb-1.5">
-        Unruggable {model === "aluminium" ? "A1" : model === "plastic" ? "P0" : "Bundle"}
+        Unruggable {model === "aluminium" ? "A1" : model === "plastic" ? "S1" : "Bundle"}
       </h1>
       <p className="hidden sm:block text-zinc-300 mb-6">Choose model → set quantity → add to basket.</p>
 
       {/* Model Cards */}
       <div className="grid gap-4 mb-6">
-        {/* Plastic Model Card */}
-        <button
-          onClick={() => setModel("plastic")}
-          className={`text-left transition-all ${model === "plastic" ? "ring-2 ring-zinc-400" : ""}`}
-        >
-        <SolanaStaticRing className="rounded-3xl" thickness={2} variant="solana">
-            <div className="grid sm:grid-cols-2 gap-4">
-            {/* Image - Desktop: static image, Mobile: carousel */}
-            <div className="hidden sm:block aspect-[4/3] rounded-2xl overflow-hidden ring-1 ring-white/10">
-              <img src="/media/plastic/frontplastic.webp" alt="Plastic Model" className="w-full h-full object-cover" />
-            </div>
-            <div className="sm:hidden">
-              <CompactMediaCarousel modelKey="plastic" />
-            </div>
-
-            {/* Info and Controls */}
-            <div className="flex flex-col justify-between">
-              <div>
-                <h3 className="text-xl font-semibold text-white mb-2">Plastic</h3>
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="text-2xl font-bold text-emerald-400">${MODELS.plastic.usd}</span>
-                  <span className="text-lg text-zinc-500 line-through">${MODELS.plastic.originalUsd}</span>
-                  <span className="rounded-full bg-emerald-400/20 px-2 py-0.5 text-xs font-semibold text-emerald-300">Save ${MODELS.plastic.originalUsd - MODELS.plastic.usd}</span>
-                </div>
-                <p className="text-sm text-zinc-400 mb-3">≈ {(MODELS.plastic.usd / solPrice).toFixed(3)} SOL · {MODELS.plastic.usd} USDC</p>
-              </div>
-
-              {/* Quantity and Add */}
-              <div>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex items-center gap-2 rounded-xl border border-white/10 p-2">
-                    <button aria-label="Decrease" onClick={() => setPlasticQty(Math.max(1, plasticQty - 1))} className="h-8 w-8 grid place-items-center rounded-lg bg-white/5">−</button>
-                    <span className="w-8 text-center">{plasticQty}</span>
-                    <button aria-label="Increase" onClick={() => setPlasticQty(plasticQty + 1)} className="h-8 w-8 grid place-items-center rounded-lg bg-white/5">+</button>
-                  </div>
-                  <button
-                    onClick={() => onAddSku("plastic", plasticQty)}
-                    className="flex-1 rounded-xl bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-500 hover:to-zinc-600 text-white px-4 py-2.5 font-medium shadow-lg shadow-zinc-600/25"
-                  >
-                    Add to Basket
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </SolanaStaticRing>
-        </button>
-
         {/* Aluminium Model Card */}
         <button
           onClick={() => setModel("aluminium")}
-          className={`text-left transition-all ${model === "aluminium" ? "ring-2 ring-zinc-400" : ""}`}
+          className={`text-left transition-all ${model === "aluminium" ? "ring-2 ring-zinc-400 rounded-3xl" : "rounded-3xl"}`}
         >
         <SolanaStaticRing className="rounded-3xl" thickness={2} variant="aluminum">
             <div className="grid sm:grid-cols-2 gap-4">
@@ -667,9 +618,9 @@ function BuyBox({
               <div>
                 <h3 className="text-xl font-semibold text-white mb-2">Aluminium</h3>
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="text-2xl font-bold text-emerald-400">${MODELS.aluminium.usd}</span>
+                  <span className="text-2xl font-bold text-zinc-400">${MODELS.aluminium.usd}</span>
                   <span className="text-lg text-zinc-500 line-through">${MODELS.aluminium.originalUsd}</span>
-                  <span className="rounded-full bg-emerald-400/20 px-2 py-0.5 text-xs font-semibold text-emerald-300">Save ${MODELS.aluminium.originalUsd - MODELS.aluminium.usd}</span>
+                  <span className="rounded-full bg-zinc-400/20 px-2 py-0.5 text-xs font-semibold text-zinc-300">Save ${MODELS.aluminium.originalUsd - MODELS.aluminium.usd}</span>
                 </div>
                 <p className="text-sm text-zinc-400 mb-3">≈ {(MODELS.aluminium.usd / solPrice).toFixed(3)} SOL · {MODELS.aluminium.usd} USDC</p>
               </div>
@@ -684,6 +635,54 @@ function BuyBox({
                   </div>
                   <button
                     onClick={() => onAddSku("aluminium", aluminiumQty)}
+                    className="flex-1 rounded-xl bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-500 hover:to-zinc-600 text-white px-4 py-2.5 font-medium shadow-lg shadow-zinc-600/25"
+                  >
+                    Add to Basket
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </SolanaStaticRing>
+        </button>
+
+        {/* Plastic Model Card */}
+        <button
+          onClick={() => setModel("plastic")}
+          className={`text-left transition-all ${model === "plastic" ? "ring-2 ring-zinc-400 rounded-3xl" : "rounded-3xl"}`}
+        >
+        <SolanaStaticRing className="rounded-3xl" thickness={2} variant="solana">
+            <div className="grid sm:grid-cols-2 gap-4">
+            {/* Image - Desktop: static image, Mobile: carousel */}
+            <div className="hidden sm:block aspect-[4/3] rounded-2xl overflow-hidden ring-1 ring-white/10">
+              <img src="/media/plastic/frontplastic.webp" alt="Plastic Model" className="w-full h-full object-cover" />
+            </div>
+            <div className="sm:hidden">
+              <CompactMediaCarousel modelKey="plastic" />
+            </div>
+
+            {/* Info and Controls */}
+            <div className="flex flex-col justify-between">
+              <div>
+                <h3 className="text-xl font-semibold text-white mb-2">Plastic (S1)</h3>
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-2xl font-bold text-zinc-400">${MODELS.plastic.usd}</span>
+                  <span className="text-lg text-zinc-500 line-through">${MODELS.plastic.originalUsd}</span>
+                  <span className="rounded-full bg-zinc-400/20 px-2 py-0.5 text-xs font-semibold text-zinc-300">Save ${MODELS.plastic.originalUsd - MODELS.plastic.usd}</span>
+                </div>
+                <p className="text-sm text-zinc-400 mb-3">≈ {(MODELS.plastic.usd / solPrice).toFixed(3)} SOL · {MODELS.plastic.usd} USDC</p>
+              </div>
+
+              {/* Quantity and Add */}
+              <div>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex items-center gap-2 rounded-xl border border-white/10 p-2">
+                    <button aria-label="Decrease" onClick={() => setPlasticQty(Math.max(1, plasticQty - 1))} className="h-8 w-8 grid place-items-center rounded-lg bg-white/5">−</button>
+                    <span className="w-8 text-center">{plasticQty}</span>
+                    <button aria-label="Increase" onClick={() => setPlasticQty(plasticQty + 1)} className="h-8 w-8 grid place-items-center rounded-lg bg-white/5">+</button>
+                  </div>
+                  <button
+                    onClick={() => onAddSku("plastic", plasticQty)}
                     className="flex-1 rounded-xl bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-500 hover:to-zinc-600 text-white px-4 py-2.5 font-medium shadow-lg shadow-zinc-600/25"
                   >
                     Add to Basket
@@ -889,7 +888,7 @@ function CheckoutBar({
               {hasShipping && devicesNeeded > 0 ? (
                 <p className="text-xs text-amber-400 mt-0.5">$10 shipping • Add {devicesNeeded} more device{devicesNeeded !== 1 ? 's' : ''} for free shipping</p>
               ) : shipping === 0 && deviceCount > 0 ? (
-                <p className="text-xs text-emerald-400 mt-0.5">Free shipping included!</p>
+                <p className="text-xs text-zinc-400 mt-0.5">Free shipping included!</p>
               ) : null}
             </div>
           </div>
@@ -974,11 +973,11 @@ function MiniCartSheet({
 
             {/* Free Shipping Incentive */}
             {showFreeShippingMessage && (
-              <div className="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-3">
-                <div className="text-sm text-emerald-300 font-medium">
+              <div className="mt-4 rounded-2xl border border-zinc-400/30 bg-zinc-500/10 p-3">
+                <div className="text-sm text-zinc-300 font-medium">
                   Add {devicesNeeded} more device{devicesNeeded !== 1 ? 's' : ''} for free shipping!
                 </div>
-                <div className="text-xs text-emerald-200/70 mt-1">
+                <div className="text-xs text-zinc-200/70 mt-1">
                   Free shipping on 3+ devices (bundles count as 2)
                 </div>
               </div>
@@ -993,13 +992,13 @@ function MiniCartSheet({
               <div className="flex items-center justify-between text-sm mt-2">
                 <span className="text-zinc-300">Shipping</span>
                 {shipping === 0 ? (
-                  <span className="text-emerald-400 font-medium">FREE</span>
+                  <span className="text-zinc-400 font-medium">FREE</span>
                 ) : (
                   <span className="text-white font-medium">${shipping}</span>
                 )}
               </div>
               {shipping === 0 && (
-                <div className="text-xs text-emerald-300 mt-1">Free shipping on {deviceCount} devices!</div>
+                <div className="text-xs text-zinc-300 mt-1">Free shipping on {deviceCount} devices!</div>
               )}
               <div className="h-px bg-white/10 my-2" />
               <div className="flex items-center justify-between text-sm">
@@ -1202,7 +1201,7 @@ function Section({ id, eyebrow, title, children }: { id: string; eyebrow: string
 
 /* ================================== Page ================================== */
 export default function PreorderPage() {
-  const [model, setModel] = useState<keyof typeof MODELS | "bundle">("plastic");
+  const [model, setModel] = useState<keyof typeof MODELS | "bundle">("aluminium");
   const [stage, setStage] = useState<"buy" | "ship" | "summary">("buy");
   const solPrice = useSolPrice();
 
