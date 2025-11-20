@@ -1044,8 +1044,8 @@ function MiniCartSheet({
   );
 }
 
-/* ===================== Inline Info Dock (6 buttons) ===================== */
-type DockKey = "faq" | "about" | "shipping" | "specs" | "partners" | "support";
+/* ===================== Inline Info Dock (4 buttons) ===================== */
+type DockKey = "faq" | "shipping" | "specs" | "support";
 
 function InlineInfoDock({
   openKey,
@@ -1058,13 +1058,11 @@ function InlineInfoDock({
 
   return (
     <div className="mt-6">
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-2 gap-3">
         {([
           { id: "faq", label: "FAQ" },
-          { id: "about", label: "About" },
           { id: "shipping", label: "Shipping" },
           { id: "specs", label: "Specs" },
-          { id: "partners", label: "Partners" },
           { id: "support", label: "Support" },
         ] as {id: DockKey; label: string}[]).map((b) => (
             <button
@@ -1088,10 +1086,8 @@ function InlineInfoDock({
         {openKey && (
           <SolanaStaticRing className="rounded-3xl" padding={20} thickness={2}>
             {openKey === "faq" && <DockFAQ />}
-            {openKey === "about" && <DockAbout />}
             {openKey === "shipping" && <DockShipping />}
             {openKey === "specs" && <DockSpecs />}
-            {openKey === "partners" && <DockPartners />}
             {openKey === "support" && <DockSupport />}
           </SolanaStaticRing>
         )}
@@ -1118,17 +1114,7 @@ function DockFAQ() {
     </div>
   );
 }
-function DockAbout() {
-  return (
-    <div className="space-y-2">
-      <div className="text-sm font-medium text-white">What is Unruggable?</div>
-      <p className="text-xs text-zinc-300 leading-relaxed">
-        A minimal, tamper-evident hardware wallet built to make Solana self-custody
-        trustless, transparent, and accessible. Small bootstrapped team in the UK.
-      </p>
-    </div>
-  );
-}
+
 function DockShipping() {
   return (
     <div className="space-y-2">
@@ -1157,25 +1143,7 @@ function DockSpecs() {
     </div>
   );
 }
-function DockPartners() {
-  const partners = [
-    "HELIUS","PHASE LABS","RADIANTS","RAPOSA","ADRASTEA","GOJIRA",
-    "The Library","SAGADAO","Solana Foundation","SolBlaze","SENTINEL","MetaDAO",
-    "STACHE NODE","Hatiad3","sphere",
-  ];
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2"><Badge>Partners</Badge><span className="text-sm font-medium text-white">Validator Partners</span></div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {partners.map(p => (
-          <div key={p} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-center text-xs text-zinc-200">
-            {p}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+
 function DockSupport() {
   return (
     <div className="space-y-3 text-center">
