@@ -50,11 +50,39 @@ export default function HomePage() {
             }
           `}</style>
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
-            {/* Logo Left */}
-            <a href="/" className="flex items-center gap-3 flex-shrink-0 hover:opacity-80 transition-opacity">
-              <img src="/unruggable_mobile.svg" alt="Unruggable" className="h-5 sm:hidden" />
-              <img src="/logo.svg" alt="Unruggable" className="hidden sm:block h-6" />
-            </a>
+            {/* Logo Left + Social Icons */}
+            <div className="flex items-center gap-4 flex-shrink-0">
+              <a href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                <img src="/unruggable_mobile.svg" alt="Unruggable" className="h-5 sm:hidden" />
+                <img src="/logo.svg" alt="Unruggable" className="hidden sm:block h-6" />
+              </a>
+              
+              {/* Social Icons */}
+              <div className="hidden sm:flex items-center gap-2">
+                <a 
+                  href="https://github.com/hogyzen12" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                  aria-label="GitHub"
+                >
+                  <svg className="w-5 h-5 text-zinc-400 hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                    <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+                  </svg>
+                </a>
+                <a 
+                  href="https://twitter.com/unruggable_hw" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                  aria-label="Twitter"
+                >
+                  <svg className="w-5 h-5 text-zinc-400 hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                </a>
+              </div>
+            </div>
             
             {/* Scrolling Ticker Center */}
             <div className="flex-1 overflow-hidden relative min-w-0">
@@ -116,20 +144,20 @@ export default function HomePage() {
             <div className="text-center mb-16">
               <Link 
                 to="/preorder"
-                className="inline-block px-12 py-6 text-2xl font-bold bg-gradient-to-r from-emerald-400 to-emerald-500 hover:from-emerald-300 hover:to-emerald-400 text-black rounded-xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 transform"
+                className="inline-block px-12 py-6 text-2xl font-bold bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-500 hover:to-zinc-600 text-white rounded-xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 transform"
               >
                 Pre-Order Now
               </Link>
               <div className="mt-4">
-                <div className="inline-flex items-center bg-emerald-500/20 border border-emerald-400/30 rounded-full px-4 py-2 space-x-2">
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-medium text-emerald-200">Pre-Orders Live • Limited Edition Initial Run • Shipping Q2 2026</span>
+                <div className="inline-flex items-center bg-zinc-500/20 border border-zinc-400/30 rounded-full px-4 py-2 space-x-2">
+                  <div className="w-2 h-2 bg-zinc-400 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium text-zinc-200">Pre-Orders Live • Limited Edition Initial Run • Shipping Q2 2026</span>
                 </div>
               </div>
             </div>
 
             {/* Product Description */}
-            <div className="max-w-3xl mx-auto text-center mb-20">
+            <div className="max-w-3xl mx-auto text-center mb-12">
               <h1 className="text-5xl lg:text-7xl font-bold leading-tight mb-6">
                 <span className="bg-gradient-to-br from-white via-zinc-100 to-zinc-300 bg-clip-text text-transparent">
                   The Hardware Wallet Engineered for Solana
@@ -138,6 +166,36 @@ export default function HomePage() {
               <p className="text-xl lg:text-2xl leading-relaxed text-zinc-300">
                 Hot wallet UX. Cold wallet security.
               </p>
+            </div>
+
+            {/* Social Links Section */}
+            <div className="max-w-md mx-auto text-center mb-4">
+              <p className="text-sm text-zinc-400 mb-4">Follow our journey</p>
+              <div className="flex items-center justify-center gap-6">
+                <a 
+                  href="https://github.com/hogyzen12" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 px-6 py-3 rounded-xl bg-black/30 border border-white/10 hover:border-white/20 hover:bg-black/40 transition-all group"
+                >
+                  <svg className="w-6 h-6 text-zinc-400 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                    <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-zinc-300 group-hover:text-white font-medium transition-colors">GitHub</span>
+                </a>
+                
+                <a 
+                  href="https://twitter.com/unruggable_hw" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 px-6 py-3 rounded-xl bg-black/30 border border-white/10 hover:border-white/20 hover:bg-black/40 transition-all group"
+                >
+                  <svg className="w-6 h-6 text-zinc-400 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                  <span className="text-zinc-300 group-hover:text-white font-medium transition-colors">Twitter</span>
+                </a>
+              </div>
             </div>
           </div>
         </section>
@@ -326,14 +384,14 @@ export default function HomePage() {
         {/* Pre-Order Now */}
         <section className="px-6 lg:px-12 py-16">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="bg-black/30 backdrop-blur-sm border border-emerald-500/20 rounded-2xl p-12 relative overflow-hidden">
+            <div className="bg-black/30 backdrop-blur-sm border border-zinc-500/20 rounded-2xl p-12 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-full">
-                <div className="absolute top-10 left-10 w-20 h-20 bg-emerald-600/20 rounded-full blur-xl"></div>
-                <div className="absolute bottom-10 right-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl"></div>
+                <div className="absolute top-10 left-10 w-20 h-20 bg-zinc-600/20 rounded-full blur-xl"></div>
+                <div className="absolute bottom-10 right-10 w-32 h-32 bg-zinc-500/10 rounded-full blur-2xl"></div>
               </div>
               
               <div className="relative z-10">
-                <h2 className="text-4xl lg:text-5xl font-bold mb-6 bg-gradient-to-r from-emerald-300 via-emerald-200 to-white bg-clip-text text-transparent">
+                <h2 className="text-4xl lg:text-5xl font-bold mb-6 bg-gradient-to-r from-zinc-300 via-zinc-200 to-white bg-clip-text text-transparent">
                   PRE-ORDERS NOW LIVE
                 </h2>
                 <p className="text-xl text-zinc-300 mb-8 max-w-2xl mx-auto">
@@ -342,7 +400,7 @@ export default function HomePage() {
                 
                 <Link 
                   to="/preorder"
-                  className="inline-block px-8 py-4 text-lg font-semibold bg-gradient-to-r from-emerald-400 to-emerald-500 hover:from-emerald-300 hover:to-emerald-400 text-black rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+                  className="inline-block px-8 py-4 text-lg font-semibold bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-500 hover:to-zinc-600 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
                 >
                   Pre-Order Now
                 </Link>

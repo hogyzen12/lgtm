@@ -602,6 +602,7 @@ function BuyBox({
         <button
           onClick={() => setModel("aluminium")}
           className={`text-left transition-all ${model === "aluminium" ? "ring-2 ring-zinc-400 rounded-3xl" : "rounded-3xl"}`}
+          style={model === "aluminium" ? { boxShadow: '0 0 12px rgba(161,161,170,0.5)' } : {}}
         >
         <SolanaStaticRing className="rounded-3xl" thickness={2} variant="aluminum">
             <div className="grid sm:grid-cols-2 gap-4">
@@ -618,9 +619,9 @@ function BuyBox({
               <div>
                 <h3 className="text-xl font-semibold text-white mb-2">Aluminium</h3>
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="text-2xl font-bold text-zinc-400">${MODELS.aluminium.usd}</span>
+                  <span className="text-2xl font-bold text-white" style={{ textShadow: '0 0 8px rgba(255,255,255,0.3)' }}>${MODELS.aluminium.usd}</span>
                   <span className="text-lg text-zinc-500 line-through">${MODELS.aluminium.originalUsd}</span>
-                  <span className="rounded-full bg-zinc-400/20 px-2 py-0.5 text-xs font-semibold text-zinc-300">Save ${MODELS.aluminium.originalUsd - MODELS.aluminium.usd}</span>
+                  <span className="rounded-full bg-zinc-400/20 px-2 py-0.5 text-xs font-semibold text-zinc-300" style={{ boxShadow: '0 0 6px rgba(161,161,170,0.4)' }}>Save ${MODELS.aluminium.originalUsd - MODELS.aluminium.usd}</span>
                 </div>
                 <p className="text-sm text-zinc-400 mb-3">≈ {(MODELS.aluminium.usd / solPrice).toFixed(3)} SOL · {MODELS.aluminium.usd} USDC</p>
               </div>
@@ -635,7 +636,7 @@ function BuyBox({
                   </div>
                   <button
                     onClick={() => onAddSku("aluminium", aluminiumQty)}
-                    className="flex-1 rounded-xl bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-500 hover:to-zinc-600 text-white px-4 py-2.5 font-medium shadow-lg shadow-zinc-600/25"
+                    className="flex-1 rounded-xl bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-500 hover:to-zinc-600 text-white px-4 py-2.5 font-medium shadow-lg shadow-zinc-600/25 transition-all hover:shadow-xl hover:shadow-zinc-500/40"
                   >
                     Add to Basket
                   </button>
@@ -650,6 +651,7 @@ function BuyBox({
         <button
           onClick={() => setModel("plastic")}
           className={`text-left transition-all ${model === "plastic" ? "ring-2 ring-zinc-400 rounded-3xl" : "rounded-3xl"}`}
+          style={model === "plastic" ? { boxShadow: '0 0 12px rgba(161,161,170,0.5)' } : {}}
         >
         <SolanaStaticRing className="rounded-3xl" thickness={2} variant="solana">
             <div className="grid sm:grid-cols-2 gap-4">
@@ -666,9 +668,9 @@ function BuyBox({
               <div>
                 <h3 className="text-xl font-semibold text-white mb-2">Plastic (S1)</h3>
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="text-2xl font-bold text-zinc-400">${MODELS.plastic.usd}</span>
+                  <span className="text-2xl font-bold text-white" style={{ textShadow: '0 0 8px rgba(255,255,255,0.3)' }}>${MODELS.plastic.usd}</span>
                   <span className="text-lg text-zinc-500 line-through">${MODELS.plastic.originalUsd}</span>
-                  <span className="rounded-full bg-zinc-400/20 px-2 py-0.5 text-xs font-semibold text-zinc-300">Save ${MODELS.plastic.originalUsd - MODELS.plastic.usd}</span>
+                  <span className="rounded-full bg-zinc-400/20 px-2 py-0.5 text-xs font-semibold text-zinc-300" style={{ boxShadow: '0 0 6px rgba(161,161,170,0.4)' }}>Save ${MODELS.plastic.originalUsd - MODELS.plastic.usd}</span>
                 </div>
                 <p className="text-sm text-zinc-400 mb-3">≈ {(MODELS.plastic.usd / solPrice).toFixed(3)} SOL · {MODELS.plastic.usd} USDC</p>
               </div>
@@ -683,7 +685,7 @@ function BuyBox({
                   </div>
                   <button
                     onClick={() => onAddSku("plastic", plasticQty)}
-                    className="flex-1 rounded-xl bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-500 hover:to-zinc-600 text-white px-4 py-2.5 font-medium shadow-lg shadow-zinc-600/25"
+                    className="flex-1 rounded-xl bg-gradient-to-r from-zinc-600 to-zinc-700 hover:from-zinc-500 hover:to-zinc-600 text-white px-4 py-2.5 font-medium shadow-lg shadow-zinc-600/25 transition-all hover:shadow-xl hover:shadow-zinc-500/40"
                   >
                     Add to Basket
                   </button>
@@ -697,7 +699,8 @@ function BuyBox({
         {/* Bundle Model Card */}
         <button
           onClick={() => setModel("bundle")}
-          className={`text-left transition-all ${model === "bundle" ? "ring-2 ring-amber-400" : ""}`}
+          className={`text-left transition-all ${model === "bundle" ? "ring-2 ring-amber-400 rounded-3xl" : "rounded-3xl"}`}
+          style={model === "bundle" ? { boxShadow: '0 0 12px rgba(251,191,36,0.5)' } : {}}
         >
           <div className="rounded-3xl border border-amber-400/30 bg-amber-500/10 p-4">
             <div className="grid sm:grid-cols-2 gap-4">
@@ -731,7 +734,7 @@ function BuyBox({
                     </div>
                     <button
                       onClick={(e) => { e.stopPropagation(); onAddSku("bundle", bundleQty); }}
-                      className="flex-1 rounded-xl bg-amber-400 hover:bg-amber-300 text-black px-4 py-2.5 font-semibold shadow"
+                      className="flex-1 rounded-xl bg-amber-400 hover:bg-amber-300 text-black px-4 py-2.5 font-semibold shadow transition-all hover:shadow-lg hover:shadow-amber-400/50"
                     >
                       Add to Basket
                     </button>
@@ -886,13 +889,13 @@ function CheckoutBar({
               <p className="text-sm text-zinc-400">Basket • {count} item{count !== 1 ? "s" : ""}</p>
               <p className="text-lg font-semibold text-white">${total}</p>
               {hasShipping && devicesNeeded > 0 ? (
-                <p className="text-xs text-amber-400 mt-0.5">$10 shipping • Add {devicesNeeded} more device{devicesNeeded !== 1 ? 's' : ''} for free shipping</p>
+                <p className="text-xs text-amber-400 mt-0.5" style={{ textShadow: '0 0 6px rgba(251,191,36,0.4)' }}>$10 shipping • Add {devicesNeeded} more device{devicesNeeded !== 1 ? 's' : ''} for free shipping</p>
               ) : shipping === 0 && deviceCount > 0 ? (
-                <p className="text-xs text-zinc-400 mt-0.5">Free shipping included!</p>
+                <p className="text-xs text-white mt-0.5" style={{ textShadow: '0 0 6px rgba(255,255,255,0.3)' }}>Free shipping included!</p>
               ) : null}
             </div>
           </div>
-          <div className="rounded-xl bg-gradient-to-r from-zinc-600 to-zinc-700 px-4 py-2 text-sm text-white">Review & Checkout</div>
+          <div className="rounded-xl bg-gradient-to-r from-zinc-600 to-zinc-700 px-4 py-2 text-sm text-white" style={{ boxShadow: '0 0 8px rgba(113,113,122,0.4)' }}>Review & Checkout</div>
         </div>
       </button>
     </div>
@@ -1016,7 +1019,7 @@ function MiniCartSheet({
               <button
                 onClick={() => onOpenHelio("crypto")}
                 disabled={items.length === 0}
-                className="rounded-2xl bg-gradient-to-r from-zinc-600 to-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed hover:from-zinc-500 hover:to-zinc-600 text-white px-4 py-3 font-medium shadow-lg shadow-zinc-600/25"
+                className="rounded-2xl bg-gradient-to-r from-zinc-600 to-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed hover:from-zinc-500 hover:to-zinc-600 text-white px-4 py-3 font-medium shadow-lg shadow-zinc-600/25 transition-all hover:shadow-xl hover:shadow-zinc-500/40"
               >
                 Buy with SOL / USDC
                 <div className="text-xs text-zinc-100/90">via Helio</div>
@@ -1024,7 +1027,7 @@ function MiniCartSheet({
               <button
                 onClick={() => onOpenHelio("fiat")}
                 disabled={items.length === 0}
-                className="rounded-2xl bg-white disabled:opacity-50 disabled:cursor-not-allowed text-black px-4 py-3 font-medium"
+                className="rounded-2xl bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-50 text-black px-4 py-3 font-medium transition-all hover:shadow-lg hover:shadow-white/30"
               >
                 Card / Apple Pay
                 <div className="text-xs text-black/70">via Helio</div>
