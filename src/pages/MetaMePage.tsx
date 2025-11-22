@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import HelioPayModal, { type HelioPayMethod } from "../components/HelioPayModal";
+import HelioPayModal from "../components/HelioPayModal";
 
 // Fixed product details
 const PLASTIC_MODEL = {
